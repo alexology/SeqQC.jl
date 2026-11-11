@@ -1,0 +1,28 @@
+name = "SeqQC"
+uuid = "96e3a7a2-52de-435d-a88c-4733074cbe3a"
+version = "0.1.0-DEV"
+authors = ["Alex Laini"]
+
+[deps]
+CodecZlibNG = "642d12eb-acb5-4437-bcfc-a25e07ad685c"
+FASTX = "c2308a5c-f048-11e8-3e8a-31650f418d12"
+StringViews = "354b36f9-a18e-4713-926e-db85100087ba"
+TranscodingStreams = "3bb67fe8-82b1-5028-8e26-92a6c54297fa"
+
+[compat]
+CodecZlibNG = "0.2"
+FASTX = "2"
+Random = "1"
+Statistics = "1"
+StringViews = "1"
+Test = "1"
+TranscodingStreams = "0.10, 0.11"
+julia = "1.10"
+
+[extras]
+Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
+Statistics = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[targets]
+test = ["Random", "Statistics", "Test"]
