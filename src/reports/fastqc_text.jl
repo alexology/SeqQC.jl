@@ -26,6 +26,7 @@ function _jdouble(x::Real)
         exp10 = length(mi)
     end
     nz = findfirst(!=('0'), digits)                  # strip leading zeros
+    nz === nothing && return neg ? "-0.0" : "0.0"   # unreachable: x != 0 was checked above
     exp10 -= nz - 1
     digits = rstrip(digits[nz:end], '0')
     isempty(digits) && (digits = "0")

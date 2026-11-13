@@ -13,8 +13,12 @@ _esc(s) = replace(string(s), "&" => "&amp;", "<" => "&lt;", ">" => "&gt;", "\"" 
 
 function _commas(n::Integer)
     s = string(abs(n))
-    out = reverse(join(Iterators.partition(reverse(s), 3) .|> String, ","))
-    return n < 0 ? "-" * out : out
+    io = IOBuffer()
+    for (i, ch) in enumerate(s)
+        i > 1 && (length(s) - i + 1) % 3 == 0 && print(io, ',')
+        print(io, ch)
+    end
+    return n < 0 ? "-" * String(take!(io)) : String(take!(io))
 end
 _cell(x::Nothing; digits = 1) = "–"
 _cell(x::Integer; digits = 1) = _commas(x)
@@ -209,7 +213,7 @@ function _charts(s::SampleSet)
         # would overwrite it (here `b`, the base-quality series)
         local nz = [any(v -> isfinite(v) && v > 0, view(y, :, j)) for j in axes(y, 2)]
         local first_nz, last_nz = findfirst(nz), findlast(nz)
-        first_nz === nothing && return x, tips, y
+        (first_nz === nothing || last_nz === nothing) && return x, tips, y
         local lo, hi = max(first_nz - 1, 1), min(last_nz + 1, length(x))
         return x[lo:hi], tips[lo:hi], y[:, lo:hi]
     end

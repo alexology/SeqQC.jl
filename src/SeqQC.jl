@@ -17,7 +17,7 @@ result.total_reads, result.total_bases, result.gc_content, result.n50
 """
 module SeqQC
 
-using FASTX: FASTQ, sequence, quality, identifier
+using FASTX: FASTQ, sequence, quality
 using StringViews: StringView
 using CodecZlibNG: GzipDecompressorStream, GzipCompressorStream
 using TranscodingStreams: NoopStream

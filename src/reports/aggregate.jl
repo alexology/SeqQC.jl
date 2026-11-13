@@ -280,7 +280,8 @@ function _series(docs)
     qmax = max(qmax, 1)
     readq = fill(NaN, n, qmax)
     for i in 1:n
-        rq[i] === nothing || (readq[i, :] = _frac(rq[i][1:qmax]))
+        v = rq[i]
+        v === nothing || (readq[i, :] = _frac(v[1:qmax]))
     end
     # base quality
     bq = fill(NaN, n, qmax)
