@@ -46,7 +46,8 @@ end
 
 # Streams up to `limit` records through `states`. Returns reads, bases and
 # whether records were left unread because of the limit.
-function _stream!(reader, states::Tuple, offset::Int, limit::Int, path::String)
+function _stream!(reader, states::Tuple, offset::Int, limit::Int, path::String,
+                  with_quality::Bool = true)
     summary = ReadSummary()
     totals = zeros(Int, N_CLASSES)
     n = 0
@@ -57,7 +58,7 @@ function _stream!(reader, states::Tuple, offset::Int, limit::Int, path::String)
         record = first(it)
         seq = codeunits(sequence(StringView, record))
         qual = codeunits(quality(StringView, record))
-        if !summarize!(summary, totals, seq, qual, offset)
+        if !summarize!(summary, totals, seq, qual, offset, with_quality)
             throw(SeqQCInputError(path, n + 1,
                 "quality string contains bytes outside the Phred+$(offset) range " *
                 "('$(Char(offset))' to '~'); check the quality encoding (phred_offset)"))
@@ -76,7 +77,8 @@ end
 
 """
     analyze(path; metrics = default_metrics(), platform = :generic,
-            phred_offset = 33, max_reads = nothing) -> QCResult
+            phred_offset = 33, max_reads = nothing,
+            threads = Threads.nthreads()) -> QCResult
     analyze(paths::AbstractVector; kwargs...) -> Vector{QCResult}
 
 Run all `metrics` over the reads of a FASTQ file (plain or gzip-compressed,
@@ -86,18 +88,26 @@ detected from the content) in a single streaming pass.
   including user-defined ones;
 - `platform`: analysis profile; only `:generic` is implemented in this version;
 - `phred_offset`: 33 (Sanger/Illumina 1.8+, ONT, PacBio) or 64 (old Illumina);
-  quality bytes outside `offset`–`'~'` raise an error, no guessing is done;
+  quality bytes outside `offset`–`'~'` raise an error, no guessing is done
+  (quality strings are read and validated only when a metric requires `:quality`);
 - `max_reads`: process only the first `max_reads` records (head sampling, not
-  random); recorded in `settings` and reported as a warning when reads were left.
+  random); recorded in `settings` and reported as a warning when reads were left;
+- `threads`: with `threads >= 2` (and Julia started with several threads),
+  gzip input is decompressed in a separate task concurrently with the analysis.
+  The analysis itself is single-threaded in this version. Results do not depend
+  on `threads`.
 
 Errors in the input raise [`SeqQCInputError`](@ref) with the record number.
 """
 function analyze(path::AbstractString; metrics = default_metrics(), platform::Symbol = :generic,
-                 phred_offset::Integer = 33, max_reads::Union{Nothing,Integer} = nothing)
+                 phred_offset::Integer = 33, max_reads::Union{Nothing,Integer} = nothing,
+                 threads::Integer = Threads.nthreads())
     platform in PLATFORMS ||
         throw(ArgumentError("platform $(repr(platform)) is not implemented yet; available: $(join(repr.(PLATFORMS), ", "))"))
     phred_offset in (33, 64) || throw(ArgumentError("phred_offset must be 33 or 64, got $(phred_offset)"))
     max_reads === nothing || max_reads >= 0 || throw(ArgumentError("max_reads must be >= 0, got $(max_reads)"))
+    threads >= 1 || throw(ArgumentError("threads must be >= 1, got $(threads)"))
+    threaded = threads >= 2 && Threads.nthreads() >= 2
     ms = Tuple(metrics)
     all(m -> m isa AbstractQCMetric, ms) || throw(ArgumentError("metrics must be AbstractQCMetric instances"))
     isempty(ms) && throw(ArgumentError("at least one metric is required"))
@@ -110,11 +120,12 @@ function analyze(path::AbstractString; metrics = default_metrics(), platform::Sy
     end
 
     states = map(init_state, ms)
+    with_quality = any(m -> :quality in requirements(m), ms)
     limit = max_reads === nothing ? typemax(Int) : Int(max_reads)
     t0 = time_ns()
-    info, nreads, nbases, more = open_reads(path) do reader, info
+    info, nreads, nbases, more = open_reads(path; threaded) do reader, info
         reader === nothing && return info, 0, 0, false
-        return (info, _stream!(reader, states, Int(phred_offset), limit, info.path)...)
+        return (info, _stream!(reader, states, Int(phred_offset), limit, info.path, with_quality)...)
     end
     elapsed = (time_ns() - t0) / 1e9
 
@@ -127,7 +138,8 @@ function analyze(path::AbstractString; metrics = default_metrics(), platform::Sy
     more && push!(warnings, "max_reads = $(max_reads): only the first $(nreads) records were analysed " *
                             "(head sampling, not random); further records were not read")
     settings = (phred_offset = Int(phred_offset), max_reads = max_reads === nothing ? nothing : Int(max_reads),
-                sampling = more ? :head : :none, metrics = collect(names),
+                threads = Int(threads), decompression = info.decompression,
+                sampling = more ? :head : :none, quality_validated = with_quality, metrics = collect(names),
                 definitions = NamedTuple{names}(map(definition, ms)))
     software = (name = "SeqQC", version = VERSION_STRING, julia = string(VERSION))
     return QCResult(info, platform, settings, nreads, nbases, results, warnings, software, elapsed)

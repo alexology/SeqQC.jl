@@ -1,7 +1,10 @@
 # Phase 1 performance baseline.
 #
 # Usage (from the package directory):
-#   julia --project=. bench/run_benchmarks.jl <workdir> [real.fastq.gz ...]
+#   julia --project=. --threads=2 bench/run_benchmarks.jl <workdir> [label=real.fastq.gz ...]
+#
+# Real inputs are given as `label=path`; only the label is printed, so that
+# results can be stored without paths or sample names.
 #
 # Synthetic inputs are generated in <workdir> (never inside the repository).
 # For every input the script times, in the same process:
@@ -9,6 +12,8 @@
 #   parse      : FASTX record iteration only (reused record)
 #   seqqc      : analyze() with the default metrics
 #   seqqc_len  : analyze() with ReadLength only
+#   seqqc_t2   : analyze() with the default metrics and threads = 2
+#                (gzip decompressed in a separate task; needs julia --threads >= 2)
 # Each stage is run once to compile, then `REPS` timed runs; the minimum and
 # the median are reported. Results are written as Markdown to stdout.
 
@@ -56,8 +61,9 @@ function stage_parse(path)
     return n
 end
 
-stage_seqqc(path) = analyze(path).total_bases
-stage_seqqc_len(path) = analyze(path; metrics = [ReadLength()]).total_bases
+stage_seqqc(path) = analyze(path; threads = 1).total_bases
+stage_seqqc_len(path) = analyze(path; metrics = [ReadLength()], threads = 1).total_bases
+stage_seqqc_t2(path) = analyze(path; threads = 2).total_bases
 
 function timeit(f, path)
     f(path)                                     # compile / warm the file cache
@@ -119,28 +125,34 @@ function main(args)
         write(tiny, "@a\nACGT\n+\nIIII\n")
         analyze(tiny)
     end
-    files = vcat(synthetic_inputs(dir), args[2:end])
+    files = [(basename(p), p) for p in synthetic_inputs(dir)]
+    for a in args[2:end]
+        k = findfirst('=', a)
+        k === nothing && error("real inputs must be given as label=path, got $(repr(a))")
+        push!(files, (a[1:k-1], a[k+1:end]))
+    end
 
-    println("# SeqQC Phase 1 baseline\n")
+    println("# SeqQC benchmark\n")
     println("- date: ", Dates.format(now(), "yyyy-mm-dd HH:MM"))
     println("- SeqQC ", SeqQC.VERSION_STRING, ", Julia ", VERSION, ", threads ", Threads.nthreads())
     println("- CPU: ", Sys.cpu_info()[1].model, " (", Sys.CPU_THREADS, " logical cores); RAM ",
             round(Sys.total_memory() / 2^30; digits = 1), " GiB; ", Sys.KERNEL, " ", Sys.MACHINE)
     println("- first analyze() call on a 1-read file (compilation, after `using`): ", round(t_first; digits = 2), " s")
     println("- timed runs per stage: ", REPS, " (after one warm-up run); times in seconds, min / median\n")
-    println("| input | size MB | reads | bases | decompress | parse (FASTX) | seqqc (default) | seqqc (ReadLength) | reads/s | Mbases/s | input MB/s | alloc/read (B) |")
-    println("|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|")
-    for p in files
+    println("| input | size MB | reads | bases | decompress | parse (FASTX) | seqqc (default) | seqqc (ReadLength) | seqqc (threads=2) | reads/s | Mbases/s | input MB/s | alloc/read (B) |")
+    println("|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|")
+    for (label, p) in files
         r = analyze(p)
         mb = filesize(p) / 1e6
         d = timeit(stage_decompress, p)
         q = timeit(stage_parse, p)
         s = timeit(stage_seqqc, p)
         l = timeit(stage_seqqc_len, p)
-        alloc = @allocated analyze(p)
+        t2 = Threads.nthreads() >= 2 ? timeit(stage_seqqc_t2, p) : (NaN, NaN)
+        alloc = @allocated analyze(p; threads = 1)
         f(x) = string(round(x[1]; digits = 2), " / ", round(x[2]; digits = 2))
-        println("| ", basename(p), " | ", round(mb; digits = 1), " | ", r.total_reads, " | ", r.total_bases,
-                " | ", f(d), " | ", f(q), " | ", f(s), " | ", f(l),
+        println("| ", label, " | ", round(mb; digits = 1), " | ", r.total_reads, " | ", r.total_bases,
+                " | ", f(d), " | ", f(q), " | ", f(s), " | ", f(l), " | ", f(t2),
                 " | ", round(Int, r.total_reads / s[1]), " | ", round(r.total_bases / s[1] / 1e6; digits = 1),
                 " | ", round(mb / s[1]; digits = 1), " | ", round(alloc / max(1, r.total_reads); digits = 1), " |")
         flush(stdout)

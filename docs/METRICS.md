@@ -12,7 +12,14 @@ undefined for the data (e.g. a mean over zero reads); it is never replaced by 0.
   `-` or `.`; invalid bytes produce a warning).
 - Quality bytes are decoded with an explicit offset (33 by default, 64 on
   request). A byte below the offset or above `~` is an error. Phred scores
-  range over 0–93 (offset 33).
+  range over 0–93 (offset 33). Quality strings are read and validated only
+  when at least one requested metric needs quality (`settings.quality_validated`).
+- Error probabilities `10^(-Q/10)` are tabulated as integer multiples of
+  `2^-44` (relative deviation from the exact value < 3e-8 for Q ≤ 60, < 6e-5 at
+  Q93). Per-read error sums are computed in integer arithmetic, so they are the
+  **exact** sums of the tabulated values, independent of summation order, and
+  rounded once to `Float64`. Base-level error rates are computed from the exact
+  Phred histogram with the same table.
 
 ## `ReadLength` (`:read_length`)
 
@@ -34,6 +41,7 @@ Memory: one counter per distinct length (dense array below 65,536, dictionary ab
 |---|---|
 | `gc_content` | `(G + C) / (A + C + G + T)` — N, ambiguous and invalid bytes excluded from both terms |
 | `n_content` | `N / all bases` |
+| *FastQC 0.12.1 «%GC»* | checked on 2026-11-12 with four targeted inputs (`G×10 + a×10` → 50, `G×10 + U×10` → 100, `GGA, GGA` → 66, `G×10 + N×5A×5` → 66): case-insensitive, N excluded, **U not counted**, value **truncated** to an integer. SeqQC agrees except that U counts as T (correct for direct-RNA reads) and the fraction is not truncated; a FastQC compatibility mode (Phase 3) will reproduce FastQC |
 | `ambiguous_content` | non-N IUPAC codes / all bases |
 | `base_counts` | `(A, C, G, T, N, ambiguous, invalid)` |
 | `gc_histogram` | 101 counters: reads whose GC percentage `100 (G+C)/(A+C+G+T)`, rounded half up, is 0…100. This is a simple histogram, **not** FastQC's GC model (FastQC distributes reads over bins with a length-dependent model and fits a theoretical normal curve) |
@@ -62,9 +70,32 @@ Two averaging conventions are reported under different names:
 | `reads_at_least(_phred)` | reads with per-read mean Q `>=` each threshold (default 7, 10, 12, 15, 20, 30). The Phred-space comparison is exact in integers; the error-probability comparison uses the floating-point per-read value |
 | `reads_without_bases` | zero-length reads, excluded from read-level quality |
 
-Floating-point note: read-level means are sums of per-read `Float64` values in
-input order. Merging states of disjoint read sets gives the same value up to
+Floating-point note: read-level means (`mean_read_quality`,
+`mean_read_quality_phred`, `read_quality_of_mean_error`) are sums of per-read
+`Float64` values in input order. Merging states of disjoint read sets gives the same value up to
 rounding (tested with `≈`).
+
+Also `read_quality_floor_histogram`: reads by the integer part of the
+per-read Phred-space mean, computed exactly as `div(qsum, length)`.
+
+## `PerPositionStats` (`:per_position`)
+
+Exact per-position statistics for positions `1:max_positions` (default 100,000):
+
+| Value | Definition |
+|---|---|
+| `bases[i]` | bases at position `i` |
+| `mean_quality[i]` | mean Phred score at position `i` |
+| `quality_quantiles[j, i]` | quantile `p_j` (0.10, 0.25, 0.50, 0.75, 0.90) at position `i`: the value of rank `max(1, floor(p n))` among the `n` sorted scores (the rank rule FastQC uses) |
+| `base_counts[:, i]` | counts of A, C, G, T, **U**, N and other bytes (case-insensitive; U kept separate) |
+| `raw_quality_histograms` | per-position histograms of raw quality bytes (`!`…`~`), so that a different Phred offset can be applied afterwards |
+| `beyond`, `truncated` | bases at positions > `max_positions`, pooled; `truncated = true` and a warning when reads are longer |
+
+Memory: ≈ 0.8 kB per position up to the longest read (allocated as reads get
+longer, by doubling, capped at `max_positions`); independent of the number of
+reads. Per-position statistics are meaningful for reads of similar length;
+for long reads late positions are covered by few reads. FastQC-compatible
+tables built from these values: `docs/FASTQC.md`.
 
 ## `QualityVsLength` (`:quality_vs_length`)
 

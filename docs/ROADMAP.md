@@ -24,15 +24,34 @@ Status legend: **done** (implemented, tested, documented), **partial**,
 
 ## Phase 2 — Performance baseline
 
-- Breakdown measured in Phase 1 (decompression / FASTX parse / summary / metrics); optimise the dominant stage first.
-- Decompression in a separate task with a bounded pipe; BGZF block-parallel inflate.
-- Allocation profile per read (target: zero steady-state allocations per read).
-- Benchmarks on ONT, Illumina-like and PacBio-like data, compressed and plain; Julia startup and compilation reported separately.
-- Comparison with other tools only on equivalent outputs (e.g. NanoStat-equivalent summary vs NanoPlot `--only-report` if available; `seqkit stats` if installed).
+| Item | Status |
+|---|---|
+| Stage breakdown (decompress / FASTX / summary / metrics) and profile | done (`bench/results/phase2_2026-11-12.md`, `docs/ARCHITECTURE.md` §5) |
+| Fixed-point, order-independent error sums | done |
+| Quality pass skipped when no metric needs it | done |
+| Decompression in a separate task (`threads >= 2`) | done |
+| Allocation profile per read | done: SeqQC adds none measurable; ~16 B/read inside FASTX |
+| Member-parallel / BGZF inflate | **planned** (next performance step; the real ONT file is multi-member) |
+| PacBio-like benchmark data | planned (no PacBio data available locally) |
+| Comparison with other tools | partial: values checked against NanoPlot 1.47.1; process-level timing against FastQC 0.12.1 (`bench/results/fastqc_comparison_2026-11-12.md`; work not equivalent until Phase 3) |
+| Package precompilation workload (start-up latency) | done: fresh-process run on 50,000 reads 3.24 → 0.66 s |
 
 ## Phase 3 — Illumina profile
 
-FastQC-like modules: per-base quality (bounded position bins; long reads never allocate per-position arrays proportional to the longest read without a bound), per-sequence quality, per-base content, per-sequence GC, per-base N, length distribution, duplication levels, overrepresented sequences, adapter content, k-mer enrichment. Compatibility mode with documented differences (sampling, grouping, quantiles, duplication estimation, adapter matching, thresholds). Validation against FastQC reference outputs (FastQC must be installed; not available on this machine as of 2026-11-10).
+| Item | Status |
+|---|---|
+| `PerPositionStats` (exact, bounded per-position quality quantiles and base counts) | done |
+| `SeqQC.FastQC`: Basic Statistics, per-base quality, per-sequence quality, per-base content, per-base N, length distribution, flags | done: identical to FastQC 0.12.1 on 116 inputs (`docs/FASTQC.md`, `validation/results/fastqc_0.12.1_2026-11-12.md`) |
+| Per-sequence GC content (FastQC GC model): counts | done (identical); flag not reproduced (fitted normal not observable in text output) |
+| Overrepresented sequences incl. "Possible Source" | done (identical; contaminant list supplied by the user) |
+| Adapter content | done (identical) |
+| `fastqc_data.txt` / `summary.txt` writer | done (identical line by line, documented exclusions) |
+| Duplication levels, k-mer content, per-tile quality | not planned (user's decision of 2026-11-13: stop after adapters/overrepresented, CLI + text, single-sample HTML) |
+| `phred_offset = :auto` for SeqQC's own metrics | not planned: FastQC's guess (≥ `@` → Phred+64) misdecodes high-quality Phred+33 data; SeqQC keeps an explicit offset and reproduces the guess only in `SeqQC.FastQC` |
+
+Original scope:
+
+FastQC-like modules: per-base quality (bounded position bins; long reads never allocate per-position arrays proportional to the longest read without a bound), per-sequence quality, per-base content, per-sequence GC, per-base N, length distribution, duplication levels, overrepresented sequences, adapter content, k-mer enrichment. Compatibility mode with documented differences (sampling, grouping, quantiles, duplication estimation, adapter matching, thresholds). Validation against FastQC reference outputs (FastQC 0.12 with Java 21 available locally since 2026-11-12).
 
 ## Phase 4 — Long reads and BAM
 
@@ -45,6 +64,17 @@ FastQC-like modules: per-base quality (bounded position bins; long reads never a
 Thread-local states, chunked processing within files, multi-file execution, merge in chunk order for deterministic floating-point results, measured scaling.
 
 ## Phase 6 — Integration
+
+| Item | Status |
+|---|---|
+| JSON report, versioned schema `seqqc-result` 1.0.0 (`to_json`, `write_json`, `report(result, "x.json")`) | done (`docs/JSON.md`) |
+| Multi-sample report (`aggregate`, MultiQC-like, SeqQC results only): table, TSV, JSON, interactive HTML | done (`docs/MULTISAMPLE.md`) |
+| Exact merging of several files into one sample | planned |
+| Single-sample HTML report (`report(result, "x.html")`) | done |
+| Export to MultiQC proper | not planned for now (user's decision: SeqQC has its own aggregation) |
+| CLI (`seqqc analyze`, `seqqc report`, launchers) | done (`docs/CLI.md`) |
+
+Original scope:
 
 CLI (`seqqc analyze ...`), versioned JSON schema, HTML report with inline SVG, MultiQC integration (custom-content JSON or a documented module format; to be investigated), FastQC-compatible text only for validated modules, full documentation.
 

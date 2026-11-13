@@ -1,0 +1,4 @@
+#!/bin/sh
+# Launcher for the SeqQC command line. Threads: SEQQC_THREADS (default: auto).
+dir=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+exec julia --project="$dir/.." --startup-file=no -t "${SEQQC_THREADS:-auto}" "$dir/seqqc.jl" "$@"

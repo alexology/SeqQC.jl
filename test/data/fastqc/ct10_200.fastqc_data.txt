@@ -1,0 +1,165 @@
+##FastQC	0.12.1
+>>Basic Statistics	pass
+#Measure	Value
+Filename	ct10_200.fastq
+File type	Conventional base calls
+Encoding	Illumina 1.5
+Total Sequences	200
+Total Bases	200 bp
+Sequences flagged as poor quality	0
+Sequence length	1
+%GC	55
+>>END_MODULE
+>>Per base sequence quality	fail
+#Base	Mean	Median	Lower Quartile	Upper Quartile	10th Percentile	90th Percentile
+1	9.0	9.0	9.0	9.0	9.0	9.0
+>>END_MODULE
+>>Per sequence quality scores	fail
+#Quality	Count
+9	200.0
+>>END_MODULE
+>>Per base sequence content	warn
+#Base	G	A	T	C
+1	27.500000000000004	27.500000000000004	17.5	27.500000000000004
+>>END_MODULE
+>>Per sequence GC content	fail
+#GC Content	Count
+0	90.0
+1	90.0
+2	90.0
+3	90.0
+4	90.0
+5	90.0
+6	90.0
+7	90.0
+8	90.0
+9	90.0
+10	90.0
+11	90.0
+12	90.0
+13	90.0
+14	90.0
+15	90.0
+16	90.0
+17	90.0
+18	90.0
+19	90.0
+20	90.0
+21	90.0
+22	90.0
+23	90.0
+24	90.0
+25	90.0
+26	90.0
+27	90.0
+28	90.0
+29	90.0
+30	90.0
+31	90.0
+32	90.0
+33	90.0
+34	90.0
+35	90.0
+36	90.0
+37	90.0
+38	90.0
+39	90.0
+40	90.0
+41	90.0
+42	90.0
+43	90.0
+44	90.0
+45	90.0
+46	90.0
+47	90.0
+48	90.0
+49	90.0
+50	100.0
+51	110.0
+52	110.0
+53	110.0
+54	110.0
+55	110.0
+56	110.0
+57	110.0
+58	110.0
+59	110.0
+60	110.0
+61	110.0
+62	110.0
+63	110.0
+64	110.0
+65	110.0
+66	110.0
+67	110.0
+68	110.0
+69	110.0
+70	110.0
+71	110.0
+72	110.0
+73	110.0
+74	110.0
+75	110.0
+76	110.0
+77	110.0
+78	110.0
+79	110.0
+80	110.0
+81	110.0
+82	110.0
+83	110.0
+84	110.0
+85	110.0
+86	110.0
+87	110.0
+88	110.0
+89	110.0
+90	110.0
+91	110.0
+92	110.0
+93	110.0
+94	110.0
+95	110.0
+96	110.0
+97	110.0
+98	110.0
+99	110.0
+100	110.0
+>>END_MODULE
+>>Per base N content	pass
+#Base	N-Count
+1	0.0
+>>END_MODULE
+>>Sequence Length Distribution	pass
+#Length	Count
+1	200.0
+>>END_MODULE
+>>Sequence Duplication Levels	fail
+#Total Deduplicated Percentage	2.0
+#Duplication Level	Percentage of total
+1	0.0
+2	0.0
+3	0.0
+4	0.0
+5	0.0
+6	0.0
+7	0.0
+8	0.0
+9	0.0
+>10	17.5
+>50	82.5
+>100	0.0
+>500	0.0
+>1k	0.0
+>5k	0.0
+>10k+	0.0
+>>END_MODULE
+>>Overrepresented sequences	fail
+#Sequence	Count	Percentage	Possible Source
+A	55	27.500000000000004	No Hit
+C	55	27.500000000000004	No Hit
+G	55	27.500000000000004	No Hit
+T	35	17.5	No Hit
+>>END_MODULE
+>>Adapter Content	warn
+>>END_MODULE

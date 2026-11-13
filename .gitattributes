@@ -1,0 +1,5 @@
+# Keep test fixtures (FASTQ inputs and FastQC reference outputs) byte for byte
+test/data/** -text
+# Launchers keep their native line endings
+bin/seqqc text eol=lf
+bin/seqqc.cmd text eol=crlf

@@ -1,0 +1,4 @@
+# Two entries of FastQC 0.12.1's contaminant list (public Illumina primer sequences),
+# used to test the 'Possible Source' rules.
+Illumina Paired End PCR Primer 2	CAAGCAGAAGACGGCATACGAGATCGGTCTCGGCATTCCTGCTGAACCGCTCTTCCGATCT
+Illumina Paired End Sequencing Primer 2	CGGTCTCGGCATTCCTGCTGAACCGCTCTTCCGATCT

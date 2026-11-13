@@ -5,13 +5,15 @@
     InputInfo
 
 Description of an analysed input: `path`, `file_size` (bytes on disk),
-`compression` (`:none` or `:gzip`) and `format` (`:fastq`).
+`compression` (`:none` or `:gzip`), `format` (`:fastq`) and `decompression`
+(`:none`, `:inline` or `:task` — inflated in a separate task).
 """
 struct InputInfo
     path::String
     file_size::Int
     compression::Symbol
     format::Symbol
+    decompression::Symbol
 end
 
 """
@@ -44,7 +46,8 @@ const GZIP_MAGIC = (0x1f, 0x8b)
 
 # Calls `f(reader, info)` with a FASTQ reader over the (decompressed) file and
 # closes everything afterwards. `reader === nothing` for an empty input.
-function open_reads(f, path::AbstractString)
+# `threaded = true` inflates gzip input in a separate task (`BlockPipe`).
+function open_reads(f, path::AbstractString; threaded::Bool = false)
     path = String(path)
     isfile(path) || throw(SeqQCInputError(path, nothing, "file not found"))
     raw = open(path, "r")
@@ -52,9 +55,11 @@ function open_reads(f, path::AbstractString)
         head = read(raw, 2)
         seekstart(raw)
         gz = length(head) == 2 && (head[1], head[2]) == GZIP_MAGIC
-        stream = gz ? GzipDecompressorStream(raw) : NoopStream(raw)
+        mode = !gz ? :none : threaded ? :task : :inline
+        stream = mode === :task ? NoopStream(BlockPipe(raw)) :
+                 mode === :inline ? GzipDecompressorStream(raw) : NoopStream(raw)
         try
-            info = InputInfo(path, filesize(path), gz ? :gzip : :none, :fastq)
+            info = InputInfo(path, filesize(path), gz ? :gzip : :none, :fastq, mode)
             empty_input = try
                 eof(stream)
             catch err

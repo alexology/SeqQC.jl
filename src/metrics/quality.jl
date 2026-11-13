@@ -19,7 +19,9 @@ Read level (zero-length reads are excluded and counted in `reads_without_bases`)
 `read_quality_of_mean_error` (Phred value of the mean over reads of the
 per-read mean error probability; this is NanoPlot's `mean_qual`),
 histograms of both per-read values in bins of width 0.1 Q (bin `k` holds values
-in `[k/10, (k+1)/10)`), and the number of reads whose per-read mean Q is
+in `[k/10, (k+1)/10)`), an exact histogram of `floor` of the per-read
+Phred-space mean (`read_quality_floor_histogram`, integer arithmetic; FastQC's
+per-sequence quality scores), and the number of reads whose per-read mean Q is
 `>= t` for each threshold `t`.
 
 All bases of a read are used (no trimming of the read start).
@@ -43,6 +45,7 @@ mutable struct QualityState
     base_histogram::Vector{Int}         # index Q + 1
     read_histogram::Vector{Int}         # error-probability mean, 0.1 bins
     read_histogram_phred::Vector{Int}   # Phred-space mean, 0.1 bins
+    read_floor_histogram::Vector{Int}   # floor(Phred-space mean), exact integer, index + 1
     above::Vector{Int}                  # per threshold, error-probability mean
     above_phred::Vector{Int}
     reads::Int
@@ -61,7 +64,7 @@ definition(::QualityDistribution) = "Phred-space mean = arithmetic mean of Phred
 function init_state(m::QualityDistribution)
     k = length(m.thresholds)
     return QualityState(copy(m.thresholds), zeros(Int, MAX_PHRED + 1), zeros(Int, READ_Q_BINS),
-                        zeros(Int, READ_Q_BINS), zeros(Int, k), zeros(Int, k), 0, 0, 0.0, 0.0, 0.0)
+                        zeros(Int, READ_Q_BINS), zeros(Int, MAX_PHRED + 1), zeros(Int, k), zeros(Int, k), 0, 0, 0.0, 0.0, 0.0)
 end
 
 @inline _q_bin(q::Float64) = clamp(floor(Int, 10 * q), 0, READ_Q_BINS - 1) + 1
@@ -86,6 +89,7 @@ function update!(st::QualityState, read::ReadView)
     st.sum_read_error += s.error_sum / len
     @inbounds st.read_histogram[_q_bin(q_err)] += 1
     @inbounds st.read_histogram_phred[_q_bin(q_phred)] += 1
+    @inbounds st.read_floor_histogram[div(s.qsum, len) + 1] += 1
     @inbounds for (i, t) in enumerate(st.thresholds)
         st.above[i] += q_err >= t
         st.above_phred[i] += s.qsum >= t * len      # exact integer comparison
@@ -98,6 +102,7 @@ function Base.merge!(dst::QualityState, src::QualityState)
     dst.base_histogram .+= src.base_histogram
     dst.read_histogram .+= src.read_histogram
     dst.read_histogram_phred .+= src.read_histogram_phred
+    dst.read_floor_histogram .+= src.read_floor_histogram
     dst.above .+= src.above
     dst.above_phred .+= src.above_phred
     dst.reads += src.reads
@@ -128,6 +133,7 @@ function finalize_metric(st::QualityState)
             read_quality_of_mean_error = st.reads == 0 ? nothing : -10 * log10(st.sum_read_error / st.reads),
             read_quality_histogram = (bin_width = 0.1, counts = copy(st.read_histogram)),
             read_quality_histogram_phred = (bin_width = 0.1, counts = copy(st.read_histogram_phred)),
+            read_quality_floor_histogram = (phred = collect(0:MAX_PHRED), counts = copy(st.read_floor_histogram)),
             reads_at_least = NamedTuple{thr}(Tuple(st.above)),
             reads_at_least_phred = NamedTuple{thr}(Tuple(st.above_phred)),
             reads_without_bases = st.reads_without_bases)

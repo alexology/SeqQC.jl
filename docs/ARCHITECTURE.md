@@ -68,12 +68,19 @@ src/
   core/result.jl       QCResult, property forwarding, text display
   metrics/*.jl         ReadLength, BaseComposition, QualityDistribution, QualityVsLength
   platforms/           planned: Illumina, Nanopore, PacBio HiFi, PacBio CLR profiles
-  reports/             planned: JSON, HTML, MultiQC, FastQC-like text
+  metrics/positional.jl  PerPositionStats (exact, bounded per-position statistics)
+  compat/fastqc.jl     SeqQC.FastQC: FastQC 0.12.1-compatible module tables and flags,
+                       computed from QCResult only (no effect on the analysis engine)
+  reports/json.jl      versioned JSON document of a QCResult (own writer, no dependency)
+  reports/jsonread.jl  strict JSON reader (own, typed numeric arrays) to read reports back
+  reports/aggregate.jl SampleSet: multi-sample table and common-bin series, TSV/JSON
+  reports/html.jl      self-contained HTML for a SampleSet (inline SVG, minimal JS)
+  reports/             planned: single-sample HTML, FastQC-like text
 ```
 
 ### IO
 
-`open_reads(f, path)` sniffs gzip from the magic bytes (`1f 8b`), never from
+`open_reads(f, path; threaded)` sniffs gzip from the magic bytes (`1f 8b`), never from
 the extension, and the format from the first decompressed byte: `@` FASTQ,
 `>` FASTA (rejected for now), `B` inside gzip (BAM, rejected for now).
 Parser and decompression errors are wrapped in `SeqQCInputError` with the
@@ -123,19 +130,47 @@ versions and elapsed time. Metric values are reachable directly
 (`result.n50`) when the name is unique across metrics, otherwise an
 `ArgumentError` names the candidates.
 
-## 5. Performance design (to be driven by measurement)
+## 5. Performance design (driven by measurement)
 
-Phase 1 baseline in `bench/results/`. Points to investigate in Phase 2, in this
-order, only where measurements show a bottleneck:
+Measurements in `bench/results/` (baseline 2026-11-10, Phase 2 2026-11-12).
 
-1. gzip decompression (single-threaded zlib-ng): decompress in a separate task
-   feeding a bounded pipe (pattern already used by PrimerDemux.jl), or BGZF
-   block-parallel inflate with LibDeflate when the input is BGZF;
-2. FASTX record parsing cost versus the summary pass;
-3. the error-probability sum is a serial floating-point chain; splitting it
-   into several accumulators changes rounding and must stay deterministic;
-4. chunked multi-threading within a file (parse in one task, analyse chunks
-   in workers with thread-local states, merge in chunk order) and across files.
+Done in Phase 2:
+
+1. **Fixed-point error sums.** The serial `Float64` sum of error probabilities
+   was the slowest loop (0.8 GB/s). Error probabilities are now tabulated as
+   multiples of 2^-44 and summed in `Int64` partial sums (chunks of 2^18 bases,
+   no overflow) into an `Int128`: SIMD-friendly (2 GB/s), exact and
+   order-independent, which also makes per-read values independent of any
+   future chunking.
+2. **Quality pass only when needed**: `summarize!` skips quality when no metric
+   declares `:quality` (ReadLength-only on plain input: 0.54 → 0.32 s per
+   150 Mb, within 0.1 s of FASTX parsing).
+3. **Decompression task** (`src/io/pipe.jl`, `threads >= 2`): a producer task
+   inflates into 1 MiB blocks passed through a bounded `Channel` (depth 8) with
+   recycled buffers; producer errors are re-thrown to the reader, early close
+   stops the producer. −31% on gzip Illumina-like input; ~1% on the real ONT
+   file, whose run is bound by single-stream inflate (12.5 s of 14 s).
+
+4. **Precompilation workload** (`src/precompile.jl`, PrecompileTools): plain
+   and gzip analyses and the decompression task are compiled at package
+   precompilation; a fresh process analysing 50,000 reads went from 3.24 to
+   0.66 s.
+
+Measured but not changed: the Phred histogram in `QualityDistribution`
+(1.5–2 GB/s; 4-way interleaved histograms gave no gain); FASTX parsing (~44%
+of a plain-input run, plus ~16 B allocated per read inside FASTX).
+
+Next candidates, in order:
+
+1. **Member-parallel inflate** for multi-member gzip (the real ONT file has
+   members of ~31 MB; BGZF is a special case with 64 KiB members): find member
+   boundaries, inflate members concurrently (libdeflate reports consumed input
+   bytes), deliver them in file order. Boundaries must be validated by the chain
+   of member ends, never assumed from a byte pattern.
+2. Chunked multi-threading of the analysis (parse in one task, analyse record
+   chunks in workers with thread-local states, merge in chunk order).
+3. A faster parser only if FASTX becomes the bottleneck after (1)–(2), with a
+   byte-for-byte comparison against FASTX on real data.
 
 ## 6. Platform profiles (planned)
 
