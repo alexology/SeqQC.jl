@@ -1,6 +1,6 @@
 # SeqQC.jl architecture
 
-Status: 0.1.0-DEV (Phase 1). This document describes what exists and the design
+Status: 0.1.0. This document describes what exists and the design
 it is meant to grow into; planned parts are marked **planned**.
 
 ## 1. Goals and constraints
@@ -41,9 +41,10 @@ Consequences for SeqQC:
   compatibility mode; no compatibility is claimed before validation against
   reference FastQC outputs;
 - no code is copied from these tools; algorithms are re-implemented from
-  their documented definitions. GPL-3 sources (FastQC, Falco, NanoPlot) must
-  not be translated into this package unless its licence is chosen
-  accordingly (the licence of SeqQC.jl is not yet defined).
+  their documented definitions. SeqQC.jl is licensed under GPL-3.0-or-later
+  (the licence of FastQC, chosen by the owner on 2026-11-13); the FastQC
+  compatibility layer was nevertheless built from black-box experiments
+  only (`docs/FASTQC.md`).
 
 ## 3. Julia ecosystem
 

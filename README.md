@@ -7,7 +7,7 @@ Streaming quality control for sequencing reads, written in Julia.
 > performance is a design goal, not a measured guarantee: see
 > `bench/results/` for what has actually been measured.
 
-Status: **0.1.0-DEV, Phase 1** (see `docs/ROADMAP.md`). Implemented today:
+Status: **0.1.0** (see `docs/ROADMAP.md`). Implemented today:
 
 - FASTQ and gzip-compressed FASTQ (compression detected from content;
   multi-member gzip; LF and CRLF), read with FASTX.jl;
@@ -137,4 +137,12 @@ julia --project=. -e "using Pkg; Pkg.test()"
 
 ## Licence
 
-Not yet defined.
+Copyright (C) 2026 Alex Laini.
+
+SeqQC.jl is free software: you can redistribute it and/or modify it under the
+terms of the GNU General Public License as published by the Free Software
+Foundation, either version 3 of the License, or (at your option) any later
+version — the same licence as FastQC. It is distributed in the hope that it
+will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See `LICENSE` for the
+full text.

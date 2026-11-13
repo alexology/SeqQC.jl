@@ -1,7 +1,8 @@
 name = "SeqQC"
 uuid = "96e3a7a2-52de-435d-a88c-4733074cbe3a"
-version = "0.1.0-DEV"
+version = "0.1.0"
 authors = ["Alex Laini"]
+license = "GPL-3.0-or-later"
 
 [deps]
 CodecZlibNG = "642d12eb-acb5-4437-bcfc-a25e07ad685c"

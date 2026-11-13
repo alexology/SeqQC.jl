@@ -6,7 +6,7 @@ PacBio). The analysis engine makes a single pass over the input, feeds every
 read to a set of independent, mergeable metric accumulators and returns a
 structured [`QCResult`](@ref).
 
-Current scope (0.1.0-DEV): FASTQ and gzip-compressed FASTQ input, generic
+Current scope (0.1.0): FASTQ and gzip-compressed FASTQ input, generic
 (platform-independent) metrics. See `docs/ROADMAP.md` for planned features.
 
 ```julia
@@ -30,7 +30,7 @@ export analyze, default_metrics,
     memory_complexity, definition, yield_by_length, to_json, write_json, report,
     aggregate, SampleSet, write_table, read_json, sample_name, write_fastqc_data, write_fastqc_summary
 
-const VERSION_STRING = "0.1.0-DEV"
+const VERSION_STRING = "0.1.0"
 
 include("core/read.jl")
 include("core/metric.jl")
