@@ -1,6 +1,6 @@
 # FastQC "Per sequence GC content" counts (inside module SeqQC.FastQC).
 #
-# Rules determined by black-box experiments on FastQC 0.12.1 (docs/FASTQC.md):
+# Rules determined by black-box experiments on FastQC 0.12.1 (docs/src/FASTQC.md):
 # - reads are truncated: 100 <= L < 1000 to a multiple of 100, L >= 1000 to a
 #   multiple of 1000 (150 -> 100, 2850 -> 2000, 19999 -> 19000);
 # - c = number of G/C (case-insensitive) in the truncated read; N, U and IUPAC

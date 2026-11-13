@@ -28,8 +28,8 @@ change. Consumers should check `schema` and the major version.
 | `settings` | object | `phred_offset`, `max_reads` (null = all), `threads`, `decompression`, `sampling` (`"none"`, `"head"`), `quality_validated`, `metrics` (names), `definitions` (metric name → definition text) |
 | `total_reads`, `total_bases` | integer | reads and bases processed |
 | `warnings` | array of strings | analysis warnings |
-| `metrics` | object | one object per metric, keyed by metric name; fields as in `docs/METRICS.md` |
-| `fastqc` | object or null | with `fastqc = true`: `rules`, `modules` (the tables of `SeqQC.FastQC.modules`, `docs/FASTQC.md`) and `unavailable` (null, or the reason the tables could not be computed, e.g. reads longer than `max_positions`; `modules` is then null) |
+| `metrics` | object | one object per metric, keyed by metric name; fields as in `docs/src/METRICS.md` |
+| `fastqc` | object or null | with `fastqc = true`: `rules`, `modules` (the tables of `SeqQC.FastQC.modules`, `docs/src/FASTQC.md`) and `unavailable` (null, or the reason the tables could not be computed, e.g. reads longer than `max_positions`; `modules` is then null) |
 | `omitted_fields` | array of strings | field names dropped at any depth (`omit` keyword) |
 | `runtime` | object | `elapsed_seconds`; the only part that differs between identical runs |
 
@@ -70,7 +70,7 @@ Serialisation took at most 0.24 s (largest case).
 ## Aggregate document — schema `seqqc-aggregate` 1.0.0
 
 Written by `report(set, "x.json")` / `to_json(set)` for a `SampleSet`
-(`docs/MULTISAMPLE.md`): `schema`, `schema_version`, `settings`
+(`docs/src/MULTISAMPLE.md`): `schema`, `schema_version`, `settings`
 (`low_reads_fraction`, `software`, `sample_schema_versions`), `samples`,
 `sources` (input path of each sample), `table` (one array per column, `null`
 for missing values; `fastqc_flags` as objects or null), `series` (the plotted

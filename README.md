@@ -1,5 +1,7 @@
 # SeqQC.jl
 
+[![Docs](https://img.shields.io/badge/docs-dev-blue.svg)](https://alexology.github.io/SeqQC.jl/dev/)
+
 Streaming quality control for sequencing reads, written in Julia.
 
 > **Experimental.** SeqQC.jl is part of an experiment in AI-assisted
@@ -7,7 +9,7 @@ Streaming quality control for sequencing reads, written in Julia.
 > performance is a design goal, not a measured guarantee: see
 > `bench/results/` for what has actually been measured.
 
-Status: **0.1.0** (see `docs/ROADMAP.md`). Implemented today:
+Status: **0.1.0** (see `docs/src/ROADMAP.md`). Implemented today:
 
 - FASTQ and gzip-compressed FASTQ (compression detected from content;
   multi-member gzip; LF and CRLF), read with FASTX.jl;
@@ -23,14 +25,14 @@ Status: **0.1.0** (see `docs/ROADMAP.md`). Implemented today:
   length distribution, overrepresented sequences, adapter content), their
   flags (except per-sequence GC) and `fastqc_data.txt`/`summary.txt`,
   identical to FastQC 0.12.1 on the validation inputs (rules determined by
-  black-box experiments, see `docs/FASTQC.md`);
-- command line `seqqc analyze` / `seqqc report` (`docs/CLI.md`) and
+  black-box experiments, see `docs/src/FASTQC.md`);
+- command line `seqqc analyze` / `seqqc report` (`docs/src/CLI.md`) and
   single-sample HTML reports;
 - JSON report with a versioned schema (`report(result, "sample.json")`,
-  `docs/JSON.md`);
+  `docs/src/JSON.md`);
 - multi-sample summary (`aggregate`, similar in purpose to MultiQC but for
   SeqQC results only): table, TSV, JSON and a self-contained interactive HTML
-  page with distribution charts (`docs/MULTISAMPLE.md`);
+  page with distribution charts (`docs/src/MULTISAMPLE.md`);
 - input validation with record numbers; custom metrics without engine changes.
 
 Not implemented: platform profiles and metadata (Nanopore, PacBio HiFi/CLR),
@@ -48,14 +50,15 @@ bin/seqqc report -o qc/all.html qc/
 
 ## Installation
 
-The package is not registered. From a local checkout:
+The package is not registered. Install it from GitHub:
 
 ```julia
 using Pkg
-Pkg.develop(path = "path/to/SeqQC.jl")
+Pkg.add(url = "https://github.com/alexology/SeqQC.jl")
 ```
 
-Requires Julia 1.10 or later (developed and tested on 1.12.2).
+or, from a local clone, `Pkg.develop(path = "path/to/SeqQC.jl")`. Julia ≥ 1.10
+(developed and tested on 1.12 and 1.13).
 
 ## Usage
 
@@ -70,7 +73,7 @@ result.mean_read_quality     # mean of per-read -10log10(mean error probability)
 result.mean_read_quality_phred
 result.metrics.quality.reads_at_least.Q20
 yield_by_length(result)      # cumulative yield by minimum read length
-report(result, "sample.json") # versioned JSON document (docs/JSON.md)
+report(result, "sample.json") # versioned JSON document (docs/src/JSON.md)
 
 # a subset of metrics
 analyze("sample.fastq"; metrics = [ReadLength(), BaseComposition()])
@@ -119,15 +122,11 @@ SeqQC.FastQC.flags(r)              # pass / warn / fail
 
 ## Documentation
 
-- `docs/ARCHITECTURE.md` — design, layers, survey of existing tools and libraries
-- `docs/METRICS.md` — exact definitions and limitations of every metric
-- `docs/FASTQC.md` — FastQC 0.12.1 rules, evidence and validation
-- `docs/JSON.md` — JSON report schema
-- `docs/MULTISAMPLE.md` — multi-sample reports
-- `docs/CLI.md` — command line
-- `docs/ROADMAP.md` — phases and status
-- `docs/BENCHMARKS.md` — benchmark methodology; results in `bench/results/`
-- `docs/DEVELOPMENT.md` — development log
+Online: <https://alexology.github.io/SeqQC.jl/dev/> (built from `docs/`; build
+locally with `julia --project=docs docs/make.jl` after
+`julia --project=docs -e "using Pkg; Pkg.instantiate()"`). Main pages:
+metrics, multi-sample reports, command line, JSON reports, FastQC
+compatibility, architecture, benchmarks, roadmap, development log, API.
 
 ## Tests
 

@@ -8,7 +8,7 @@ julia --project=. validation/fastqc_text_compare.jl <FastQC dir> <work> label=pa
 ```
 
 Both use FastQC's own contaminant list for "Possible Source" (read from the FastQC installation, not
-stored here). 199 inputs: every designed experiment file of `docs/FASTQC.md` (grouping, quantiles,
+stored here). 199 inputs: every designed experiment file of `docs/src/FASTQC.md` (grouping, quantiles,
 encodings, length bins, flags, GC model, adapters incl. read-order effects, overrepresented sequences
 incl. the 100,000-distinct limit with 150,000-read files, tie order and contaminant windows), the
 `maxlen<L>` files at every grouping transition up to 65,010 bp, `mixed` (50,000 reads with N/IUPAC/U/

@@ -7,7 +7,7 @@ read to a set of independent, mergeable metric accumulators and returns a
 structured [`QCResult`](@ref).
 
 Current scope (0.1.0): FASTQ and gzip-compressed FASTQ input, generic
-(platform-independent) metrics. See `docs/ROADMAP.md` for planned features.
+(platform-independent) metrics. See `docs/src/ROADMAP.md` for planned features.
 
 ```julia
 using SeqQC

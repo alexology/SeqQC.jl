@@ -5,7 +5,7 @@ Software: FastQC 0.12.1 on OpenJDK 21.0.3 (Temurin), JVM options of the FastQC l
 (`-Xmx512m -XX:+ExitOnOutOfMemoryError -Djava.awt.headless=true`); SeqQC 0.1.0-DEV on
 Julia 1.12.2 (real `julia.exe`, not the juliaup launcher).
 Script: `bench/compare_fastqc.ps1` (2 runs per configuration, sequential, nothing else running).
-Inputs: the synthetic files of `docs/BENCHMARKS.md`, a 50,000-read synthetic file with N/IUPAC/
+Inputs: the synthetic files of `docs/src/BENCHMARKS.md`, a 50,000-read synthetic file with N/IUPAC/
 lower-case bases (30–250 bp), and the real ONT amplicon file of the other result files (label only).
 
 ## What is compared — the work is NOT equivalent

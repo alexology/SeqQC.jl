@@ -36,7 +36,7 @@ filled only when at least one metric declares `:quality` in its
 - `invalid`: any other byte;
 - `qsum`: sum of Phred scores (integer);
 - `error_sum`: sum of base error probabilities `10^(-Q/10)` (Float64, fixed
-  order of operations, see `docs/METRICS.md`);
+  order of operations, see `docs/src/METRICS.md`);
 - `qmin`, `qmax`: smallest and largest Phred score (`-1` for an empty read);
 - `mean_error_q`: per-read error-probability mean quality
   `-10 log10(error_sum / length)`, capped at $(126 - 33) and rounded to 6

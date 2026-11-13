@@ -1,5 +1,5 @@
 # JSON report: a versioned, dependency-free serialisation of QCResult.
-# The schema is documented in docs/JSON.md; bump JSON_SCHEMA_VERSION on any
+# The schema is documented in docs/src/JSON.md; bump JSON_SCHEMA_VERSION on any
 # incompatible change (renamed/removed field, changed type or meaning).
 
 const JSON_SCHEMA = "seqqc-result"
@@ -34,7 +34,7 @@ _json(io::IO, x::Nothing, omit) = print(io, "null")
 _json(io::IO, x::Missing, omit) = print(io, "null")
 _json(io::IO, x::Bool, omit) = print(io, x ? "true" : "false")
 _json(io::IO, x::Integer, omit) = print(io, x)
-# Non-finite values have no JSON representation: null (docs/JSON.md).
+# Non-finite values have no JSON representation: null (docs/src/JSON.md).
 _json(io::IO, x::AbstractFloat, omit) = isfinite(x) ? print(io, repr(Float64(x))) : print(io, "null")
 _json(io::IO, x::AbstractString, omit) = _json_string(io, x)
 _json(io::IO, x::Symbol, omit) = _json_string(io, String(x))
@@ -81,7 +81,7 @@ _json(io::IO, x, omit) = throw(ArgumentError("cannot serialise a value of type $
     to_json(result::QCResult; omit = $(DEFAULT_JSON_OMIT), fastqc = false) -> String
 
 Serialise `result` to JSON (schema `$(JSON_SCHEMA)` version $(JSON_SCHEMA_VERSION),
-see `docs/JSON.md`). Field names listed in `omit` are dropped at any depth and
+see `docs/src/JSON.md`). Field names listed in `omit` are dropped at any depth and
 listed in `omitted_fields`; by default the raw per-position quality
 histograms (94 numbers per read position) are omitted. With `fastqc = true`
 the FastQC-compatible module tables and flags are added under `fastqc`
@@ -126,7 +126,7 @@ end
 # FastQC tables, or the reason they cannot be computed (e.g. reads longer than
 # max_positions): recorded instead of failing, so batch runs keep going.
 function _fastqc_section(r::QCResult)
-    rules = "FastQC 0.12.1 (docs/FASTQC.md)"
+    rules = "FastQC 0.12.1 (docs/src/FASTQC.md)"
     try
         return (rules = rules, modules = FastQC.modules(r), unavailable = nothing)
     catch err

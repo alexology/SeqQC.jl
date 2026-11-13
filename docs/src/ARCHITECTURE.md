@@ -44,7 +44,7 @@ Consequences for SeqQC:
   their documented definitions. SeqQC.jl is licensed under GPL-3.0-or-later
   (the licence of FastQC, chosen by the owner on 2026-11-13); the FastQC
   compatibility layer was nevertheless built from black-box experiments
-  only (`docs/FASTQC.md`).
+  only (`docs/src/FASTQC.md`).
 
 ## 3. Julia ecosystem
 

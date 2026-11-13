@@ -3,7 +3,7 @@
 
 FastQC-compatible views of SeqQC results. The rules below were determined by
 black-box experiments on FastQC 0.12.1 outputs (no FastQC source code was read
-or translated); they are documented with the evidence in `docs/FASTQC.md`.
+or translated); they are documented with the evidence in `docs/src/FASTQC.md`.
 Only modules listed there as validated are provided.
 
 Analyse with [`metrics`](@ref SeqQC.FastQC.metrics) (or any metric set that

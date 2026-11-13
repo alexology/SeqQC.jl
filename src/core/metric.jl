@@ -12,7 +12,7 @@ Supertype of all QC metrics. A metric `M` implements:
 - `Base.merge!(dst, src)`: add the reads of `src` to `dst` (same metric and
   configuration); merging must give the same result as streaming the reads of
   both states through one accumulator (floating-point sums may differ by
-  rounding, see `docs/METRICS.md`);
+  rounding, see `docs/src/METRICS.md`);
 - `finalize_metric(state)`: an immutable result (`NamedTuple` or struct);
 - `metric_name(m)`: a unique `Symbol` used as key in [`QCResult`](@ref).
 

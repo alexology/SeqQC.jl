@@ -57,7 +57,7 @@ Columns: reads, bases, minimum/median/mean/maximum length, read N50, GC %,
 N %, mean base quality (Phred), mean read quality (error-probability mean),
 % reads with mean quality ≥ Q20, % bases ≥ Q30, number of warnings, and
 FastQC flags when the reports contain them (`fastqc = true`). Definitions:
-`docs/METRICS.md`; a metric missing from a sample's analysis is an empty cell.
+`docs/src/METRICS.md`; a metric missing from a sample's analysis is an empty cell.
 
 `warnings` lists every per-sample warning (prefixed by the sample name), the
 skipped files, and samples with fewer reads than `low_reads_fraction` × the

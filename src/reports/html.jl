@@ -351,7 +351,7 @@ $(join((".s$(i-1){stroke:$(_CAT_DARK[i])} .k$(i-1){background:$(_CAT_DARK[i])}" 
         println(io, "</div>")
     end
     println(io, """<div class="grid2">""", String(take!(body)), "</div>")
-    println(io, """<footer><p>Definitions: SeqQC <code>docs/METRICS.md</code>. Read quality is the
+    println(io, """<footer><p>Definitions: SeqQC <code>docs/src/METRICS.md</code>. Read quality is the
 error-probability mean per read; GC excludes N and IUPAC codes. Distributions are fractions of each
 sample's reads or bases, so samples of different size are comparable. Values for every sample are in
 the table and in the TSV/JSON outputs of <code>aggregate</code>.</p></footer></div>

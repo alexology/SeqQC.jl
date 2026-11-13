@@ -1,6 +1,6 @@
 # FastQC "Overrepresented sequences" (inside module SeqQC.FastQC).
 #
-# Rules determined by black-box experiments on FastQC 0.12.1 (docs/FASTQC.md):
+# Rules determined by black-box experiments on FastQC 0.12.1 (docs/src/FASTQC.md):
 # - key: the first 50 bases of each read, upper-cased (N kept);
 # - a new key is tracked only while fewer than 100,000 distinct keys are
 #   tracked; tracked keys are counted to the end of the file;
@@ -45,7 +45,7 @@ end
     Overrepresented(; contaminants = nothing)
 
 Metric for FastQC's overrepresented sequences (rules above and in
-`docs/FASTQC.md`). `contaminants`: `nothing` (no "Possible Source"), a path to
+`docs/src/FASTQC.md`). `contaminants`: `nothing` (no "Possible Source"), a path to
 a FastQC-style list, or a vector of `name => sequence`. Not mergeable: which
 sequences are tracked depends on the order of the reads.
 """

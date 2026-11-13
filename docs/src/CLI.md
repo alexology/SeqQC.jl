@@ -39,7 +39,7 @@ second thanks to the precompilation workload.
 Outputs per input: `<sample>.seqqc.json` (always), FastQC text files with
 `--fastqc`, `<sample>.html` with `--html`. Then `seqqc_report.html`,
 `seqqc_report.tsv` and `seqqc_report.json` for all successfully analysed
-inputs. Sample names follow `docs/MULTISAMPLE.md` (`/` of a directory prefix
+inputs. Sample names follow `docs/src/MULTISAMPLE.md` (`/` of a directory prefix
 becomes `_` in file names). Output names that still collide (`a/x.fastq` and
 `a_x.fastq` both give `a_x`) get `_2`, `_3`, … in input order, with a note on
 stderr: no report is ever overwritten by another input of the same run.

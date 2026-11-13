@@ -1,6 +1,6 @@
 # FastQC "Adapter Content" (inside module SeqQC.FastQC).
 #
-# Rules determined by black-box experiments on FastQC 0.12.1 (docs/FASTQC.md):
+# Rules determined by black-box experiments on FastQC 0.12.1 (docs/src/FASTQC.md):
 # - an adapter is found where its sequence occurs exactly (case-insensitive) in
 #   a read; only the first occurrence counts, at its start position;
 # - the value at position p is 100 * (reads with an occurrence starting at or

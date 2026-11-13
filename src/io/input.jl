@@ -69,10 +69,10 @@ function open_reads(f, path::AbstractString; threaded::Bool = false)
             first_byte = peek(stream, UInt8)
             if first_byte == UInt8('>')
                 throw(SeqQCInputError(path, nothing,
-                    "FASTA input is not supported yet (quality-free QC is planned, see docs/ROADMAP.md)"))
+                    "FASTA input is not supported yet (quality-free QC is planned, see docs/src/ROADMAP.md)"))
             elseif gz && first_byte == UInt8('B')
                 throw(SeqQCInputError(path, nothing,
-                    "input looks like BAM (BGZF), which is not supported yet (see docs/ROADMAP.md)"))
+                    "input looks like BAM (BGZF), which is not supported yet (see docs/src/ROADMAP.md)"))
             elseif first_byte != UInt8('@')
                 throw(SeqQCInputError(path, nothing,
                     "not a FASTQ file: first byte is $(repr(Char(first_byte))), expected '@'"))

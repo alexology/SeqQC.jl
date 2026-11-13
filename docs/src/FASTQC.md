@@ -180,7 +180,7 @@ list)".
 | GC content | fraction, U counted as T | integer part of a percentage, U ignored |
 | Per-position quantiles | defined for any `n ≥ 1` (same rank rule) | only for `n > 100` |
 | Grouped positions | per-position values available | unweighted mean of per-position values |
-| Read quality | three named averages (`docs/METRICS.md`) | integer part of the Phred-space mean |
+| Read quality | three named averages (`docs/src/METRICS.md`) | integer part of the Phred-space mean |
 
 ## Limits
 
@@ -196,4 +196,4 @@ list)".
   iteration order was not studied; it can only affect the order of equal
   counts, with 100,000 keys spread over 262,144 buckets.
 - Per-position modules are of limited use for long reads, where late
-  positions are covered by few reads (`docs/METRICS.md`).
+  positions are covered by few reads (`docs/src/METRICS.md`).

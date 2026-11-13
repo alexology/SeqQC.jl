@@ -97,7 +97,7 @@ Memory: ≈ 0.8 kB per position up to the longest read (allocated as reads get
 longer, by doubling, capped at `max_positions`); independent of the number of
 reads. Per-position statistics are meaningful for reads of similar length;
 for long reads late positions are covered by few reads. FastQC-compatible
-tables built from these values: `docs/FASTQC.md`.
+tables built from these values: `docs/src/FASTQC.md`.
 
 ## `QualityVsLength` (`:quality_vs_length`)
 

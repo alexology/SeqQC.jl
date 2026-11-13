@@ -105,7 +105,7 @@ function write_html(io::IO, r::QCResult; title = nothing)
         end
         if m !== nothing
             println(fq, """<section class="card wide"><h2>FastQC-compatible modules</h2>
-<p class="sub">Tables and pass/warn/fail flags computed with FastQC 0.12.1's rules (docs/FASTQC.md). Not computed:
+<p class="sub">Tables and pass/warn/fail flags computed with FastQC 0.12.1's rules (docs/src/FASTQC.md). Not computed:
 sequence duplication levels, per-tile quality, k-mer content, and the per-sequence GC flag.</p><div class="flags">""")
             for (k, label) in pairs(_FASTQC_MODULE_NAMES)
                 f = get(m.flags, k, nothing)
@@ -191,8 +191,8 @@ SeqQC $(_esc(VERSION_STRING)) · $(_esc(Libc.strftime("%Y-%m-%d %H:%M", time()))
     _tile(io, "GC", t.gc_percent[1] === nothing ? "–" : _cell(t.gc_percent[1]) * "%")
     println(io, "</div>")
     println(io, """<div class="grid2">""", String(take!(body)), String(take!(fq)), "</div>")
-    println(io, """<footer><p>Definitions: SeqQC <code>docs/METRICS.md</code>; FastQC-compatible modules:
-<code>docs/FASTQC.md</code>. All values are also in the JSON report (<code>report(result, "x.json")</code>).</p></footer></div>
+    println(io, """<footer><p>Definitions: SeqQC <code>docs/src/METRICS.md</code>; FastQC-compatible modules:
+<code>docs/src/FASTQC.md</code>. All values are also in the JSON report (<code>report(result, "x.json")</code>).</p></footer></div>
 <div id="tip" role="tooltip" hidden></div>
 <script type="application/json" id="seqqc-data">$(jsondata)</script>
 <script>$(_JS)</script></body></html>""")

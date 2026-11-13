@@ -1,6 +1,6 @@
 # FastQC-format text outputs (fastqc_data.txt, summary.txt) built from the
 # SeqQC.FastQC tables. Layout and number formatting follow FastQC 0.12.1
-# (docs/FASTQC.md). Modules SeqQC does not compute (Per tile sequence quality,
+# (docs/src/FASTQC.md). Modules SeqQC does not compute (Per tile sequence quality,
 # Sequence Duplication Levels) are not written; the Per sequence GC content
 # flag, which SeqQC does not reproduce, is written as "NA".
 

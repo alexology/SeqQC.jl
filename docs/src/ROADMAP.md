@@ -26,7 +26,7 @@ Status legend: **done** (implemented, tested, documented), **partial**,
 
 | Item | Status |
 |---|---|
-| Stage breakdown (decompress / FASTX / summary / metrics) and profile | done (`bench/results/phase2_2026-11-12.md`, `docs/ARCHITECTURE.md` §5) |
+| Stage breakdown (decompress / FASTX / summary / metrics) and profile | done (`bench/results/phase2_2026-11-12.md`, `docs/src/ARCHITECTURE.md` §5) |
 | Faster deterministic error sums (fixed point until 2026-11-13, then four Float64 accumulators) | done |
 | Quality pass skipped when no metric needs it | done |
 | Decompression in a separate task (`threads >= 2`) | done |
@@ -41,7 +41,7 @@ Status legend: **done** (implemented, tested, documented), **partial**,
 | Item | Status |
 |---|---|
 | `PerPositionStats` (exact, bounded per-position quality quantiles and base counts) | done |
-| `SeqQC.FastQC`: Basic Statistics, per-base quality, per-sequence quality, per-base content, per-base N, length distribution, flags | done: identical to FastQC 0.12.1 on 116 inputs (`docs/FASTQC.md`, `validation/results/fastqc_0.12.1_2026-11-12.md`) |
+| `SeqQC.FastQC`: Basic Statistics, per-base quality, per-sequence quality, per-base content, per-base N, length distribution, flags | done: identical to FastQC 0.12.1 on 116 inputs (`docs/src/FASTQC.md`, `validation/results/fastqc_0.12.1_2026-11-12.md`) |
 | Per-sequence GC content (FastQC GC model): counts | done (identical); flag not reproduced (fitted normal not observable in text output) |
 | Overrepresented sequences incl. "Possible Source" | done (identical; contaminant list supplied by the user) |
 | Adapter content | done (identical) |
@@ -67,12 +67,12 @@ Thread-local states, chunked processing within files, multi-file execution, merg
 
 | Item | Status |
 |---|---|
-| JSON report, versioned schema `seqqc-result` 1.0.0 (`to_json`, `write_json`, `report(result, "x.json")`) | done (`docs/JSON.md`) |
-| Multi-sample report (`aggregate`, MultiQC-like, SeqQC results only): table, TSV, JSON, interactive HTML | done (`docs/MULTISAMPLE.md`) |
+| JSON report, versioned schema `seqqc-result` 1.0.0 (`to_json`, `write_json`, `report(result, "x.json")`) | done (`docs/src/JSON.md`) |
+| Multi-sample report (`aggregate`, MultiQC-like, SeqQC results only): table, TSV, JSON, interactive HTML | done (`docs/src/MULTISAMPLE.md`) |
 | Exact merging of several files into one sample | planned |
 | Single-sample HTML report (`report(result, "x.html")`) | done |
 | Export to MultiQC proper | not planned for now (user's decision: SeqQC has its own aggregation) |
-| CLI (`seqqc analyze`, `seqqc report`, launchers) | done (`docs/CLI.md`) |
+| CLI (`seqqc analyze`, `seqqc report`, launchers) | done (`docs/src/CLI.md`) |
 
 Original scope:
 

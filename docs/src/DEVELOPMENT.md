@@ -15,7 +15,7 @@ the public API. Planned items stay "planned" in `ROADMAP.md` until then.
   benchmark showing it is the bottleneck and a byte-for-byte comparison of
   results on real data.
 - No silent approximation: binned, sampled or rounded values are named and
-  documented as such (`docs/METRICS.md`).
+  documented as such (`docs/src/METRICS.md`).
 - New metrics: implement the protocol in `src/core/metric.jl`, add an
   independent reference calculation to the tests and a merge test.
 - Run `julia --project=. -e "using Pkg; Pkg.test()"` before reporting work.
@@ -152,7 +152,7 @@ needs its own black-box study), or the report layer (JSON first).
 ## 2026-11-13 — FastQC per-sequence GC content
 
 - `SeqQC.FastQC.GCModel` (`src/compat/fastqc_gc.jl`) and `per_sequence_gc`:
-  FastQC 0.12.1 GC counts reproduced bit for bit (rules in `docs/FASTQC.md`).
+  FastQC 0.12.1 GC counts reproduced bit for bit (rules in `docs/src/FASTQC.md`).
 - The truncation rule needed three iterations; each wrong rule passed the
   inputs available at the time, and only real ONT reads (~2.8 kb) and a
   19,999-bp read exposed it. Lesson: single-read black-box tests must cover
@@ -167,7 +167,7 @@ needs its own black-box study), or the report layer (JSON first).
 ## 2026-11-13 — JSON report (Phase 6, first item)
 
 - `src/reports/json.jl`: own JSON writer (no runtime dependency), schema
-  `seqqc-result` 1.0.0 documented in `docs/JSON.md`; `to_json`,
+  `seqqc-result` 1.0.0 documented in `docs/src/JSON.md`; `to_json`,
   `write_json` (IO or path; temporary file + rename), `report(result, path)`
   (`.json`; other extensions raise an error).
 - Decisions: NaN/Inf → null; matrices as arrays of rows; Float64 written with
@@ -178,7 +178,7 @@ needs its own black-box study), or the report layer (JSON first).
   and compared with the result, including escaping of quotes, backslashes,
   control characters and non-ASCII text, null for undefined statistics,
   omission, determinism, atomic writes.
-- Sizes measured on real ONT data (`docs/JSON.md`).
+- Sizes measured on real ONT data (`docs/src/JSON.md`).
 - Tooling pitfall of this session: a stray `cat > file` at the start of a
   shell command waited for stdin and silently blocked the run for 20 minutes.
 
@@ -186,7 +186,7 @@ needs its own black-box study), or the report layer (JSON first).
 
 - User's decisions: SeqQC gets its own MultiQC-like function (no MultiQC.jl,
   no MultiQC export), limited to SeqQC results, minimal interactivity; sample
-  naming left to the developer (rules in `docs/MULTISAMPLE.md`).
+  naming left to the developer (rules in `docs/src/MULTISAMPLE.md`).
 - New: `src/reports/jsonread.jl` (strict reader), `src/reports/aggregate.jl`
   (`SampleSet`, `aggregate`, `sample_name`, `write_table`, aggregate JSON
   `seqqc-aggregate` 1.0.0), `src/reports/html.jl` (inline SVG, ≤ 8 samples

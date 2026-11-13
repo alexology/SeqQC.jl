@@ -14,7 +14,7 @@ Inputs (116), all synthetic except `real_ont_20k`:
   `n*`, `mode*`, `tie*`);
 - `mixed`: 50,000 reads of 30–250 bp with N, R, Y, U and lower-case bases;
 - `illumina_like_1M_150bp` (plain and gzip) and `ont_like_50k_lognormal.fastq.gz` (reads up to
-  ~100 kb), the benchmark files of `docs/BENCHMARKS.md`;
+  ~100 kb), the benchmark files of `docs/src/BENCHMARKS.md`;
 - `real_ont_20k`: the first 20,000 reads of the real ONT amplicon file (not stored).
 
 Result: **every compared column and flag identical** — 3,248 comparisons (module columns and

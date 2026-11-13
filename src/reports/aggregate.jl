@@ -404,7 +404,7 @@ end
 """
     to_json(set::SampleSet) -> String
 
-Aggregated document, schema `seqqc-aggregate` 1.0.0 (`docs/JSON.md`).
+Aggregated document, schema `seqqc-aggregate` 1.0.0 (`docs/src/JSON.md`).
 """
 function to_json(s::SampleSet)
     io = IOBuffer()

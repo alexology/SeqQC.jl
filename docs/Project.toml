@@ -1,0 +1,9 @@
+[deps]
+Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
+SeqQC = "96e3a7a2-52de-435d-a88c-4733074cbe3a"
+
+[compat]
+Documenter = "1"
+
+[sources]
+SeqQC = {path = ".."}
