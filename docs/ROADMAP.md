@@ -27,7 +27,7 @@ Status legend: **done** (implemented, tested, documented), **partial**,
 | Item | Status |
 |---|---|
 | Stage breakdown (decompress / FASTX / summary / metrics) and profile | done (`bench/results/phase2_2026-11-12.md`, `docs/ARCHITECTURE.md` §5) |
-| Fixed-point, order-independent error sums | done |
+| Faster deterministic error sums (fixed point until 2026-11-13, then four Float64 accumulators) | done |
 | Quality pass skipped when no metric needs it | done |
 | Decompression in a separate task (`threads >= 2`) | done |
 | Allocation profile per read | done: SeqQC adds none measurable; ~16 B/read inside FASTX |

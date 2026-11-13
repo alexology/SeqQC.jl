@@ -136,12 +136,13 @@ Measurements in `bench/results/` (baseline 2026-11-10, Phase 2 2026-11-12).
 
 Done in Phase 2:
 
-1. **Fixed-point error sums.** The serial `Float64` sum of error probabilities
-   was the slowest loop (0.8 GB/s). Error probabilities are now tabulated as
-   multiples of 2^-44 and summed in `Int64` partial sums (chunks of 2^18 bases,
-   no overflow) into an `Int128`: SIMD-friendly (2 GB/s), exact and
-   order-independent, which also makes per-read values independent of any
-   future chunking.
+1. **Faster error sums.** The serial `Float64` sum of error probabilities was
+   the slowest loop (0.8 GB/s). Phase 2 replaced it with a fixed-point sum
+   (multiples of 2^-44, 2 GB/s); a review on 2026-11-13 showed that its
+   quantisation moved high per-read Q values below the integer (Q67 →
+   66.999999), so it was replaced by four `Float64` accumulators in a fixed
+   order (≈ 1.9 GB/s in the Phase 2 micro-benchmark; whole run 0.61 → 0.64 s
+   on 150 Mb): deterministic, error ~ n × 1e-16.
 2. **Quality pass only when needed**: `summarize!` skips quality when no metric
    declares `:quality` (ReadLength-only on plain input: 0.54 → 0.32 s per
    150 Mb, within 0.1 s of FASTX parsing).

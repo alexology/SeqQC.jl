@@ -35,8 +35,8 @@ filled only when at least one metric declares `:quality` in its
 - `ambiguous`: IUPAC ambiguity codes other than N (`RYSWKMBDHV`);
 - `invalid`: any other byte;
 - `qsum`: sum of Phred scores (integer);
-- `error_sum`: sum of base error probabilities `10^(-Q/10)`, computed exactly
-  in fixed point (see `docs/METRICS.md`) and rounded once to `Float64`;
+- `error_sum`: sum of base error probabilities `10^(-Q/10)` (Float64, fixed
+  order of operations, see `docs/METRICS.md`);
 - `qmin`, `qmax`: smallest and largest Phred score (`-1` for an empty read);
 - `mean_error_q`: per-read error-probability mean quality
   `-10 log10(error_sum / length)`, capped at $(126 - 33) and rounded to 6
@@ -81,35 +81,36 @@ struct ReadView{V<:AbstractVector{UInt8}}
     record::FASTQ.Record
 end
 
-# Error probability for every Phred score that a printable byte can encode,
-# tabulated in fixed point as an integer multiple of 2^-44. The Float64 table
-# holds exactly the same values (integer < 2^53 divided by a power of two), so
-# integer sums of ERROR_FIXED are the exact sums of ERROR_PROBABILITY values:
-# order-independent and exactly mergeable. Quantisation: at most 2^-45 per base,
-# i.e. a relative error < 3e-8 for Q <= 60 and < 6e-5 at Q93.
+# Error probability 10^(-Q/10) for every Phred score a printable byte can
+# encode, correctly rounded Float64 values.
+#
+# Until 2026-11-13 the values were tabulated in fixed point (multiples of
+# 2^-44) and summed as integers. That quantisation moved the per-read Q of
+# high-quality reads below the integer (a read of Q67 bases gave 66.999999 and
+# failed a Q67 threshold), so per-read sums now use Float64 with four
+# independent accumulators combined in a fixed order: deterministic (same
+# result on every run and machine), relative error ~ n * 1e-16.
 const MAX_PHRED = 126 - 33
-const ERROR_SCALE_BITS = 44
-const ERROR_FIXED = Int64[round(Int64, 10.0^(-q / 10) * 2.0^ERROR_SCALE_BITS) for q in 0:MAX_PHRED]
-const ERROR_PROBABILITY = Float64[x / 2.0^ERROR_SCALE_BITS for x in ERROR_FIXED]
-# Bytes per Int64 partial sum: 2^18 * 2^44 = 2^62 < typemax(Int64).
-const ERROR_CHUNK = 1 << 18
+const ERROR_PROBABILITY = Float64[exp10(-q / 10) for q in 0:MAX_PHRED]
 
-# Exact fixed-point sum of the error probabilities of `qual` (Int128 for reads
-# of any length).
-function _error_sum_fixed(qual::AbstractVector{UInt8}, offset::Int)
-    total = Int128(0)
+# Sum of the error probabilities of `qual`, in a fixed order of operations.
+function _error_sum(qual::AbstractVector{UInt8}, offset::Int)
+    e1 = e2 = e3 = e4 = 0.0
+    n = length(qual)
     i = firstindex(qual)
-    stop = lastindex(qual)
-    @inbounds while i <= stop
-        chunk_end = min(stop, i + ERROR_CHUNK - 1)
-        acc = Int64(0)
-        @simd for j in i:chunk_end
-            acc += ERROR_FIXED[qual[j] - offset + 1]
-        end
-        total += acc
-        i = chunk_end + 1
+    stop = i + n - 1
+    @inbounds while i + 3 <= stop
+        e1 += ERROR_PROBABILITY[qual[i] - offset + 1]
+        e2 += ERROR_PROBABILITY[qual[i+1] - offset + 1]
+        e3 += ERROR_PROBABILITY[qual[i+2] - offset + 1]
+        e4 += ERROR_PROBABILITY[qual[i+3] - offset + 1]
+        i += 4
     end
-    return total
+    @inbounds while i <= stop
+        e1 += ERROR_PROBABILITY[qual[i] - offset + 1]
+        i += 1
+    end
+    return (e1 + e2) + (e3 + e4)
 end
 
 @inline function _unpack!(totals::Vector{Int}, packed::UInt64)
@@ -161,7 +162,7 @@ function summarize!(s::ReadSummary, totals::Vector{Int}, seq::AbstractVector{UIn
         hi = max(hi, b)
     end
     (lo < offset || hi > UInt8('~')) && return false
-    errsum = Float64(_error_sum_fixed(qual, offset)) / 2.0^ERROR_SCALE_BITS
+    errsum = _error_sum(qual, offset)
     s.qsum = bytesum - offset * len
     s.error_sum = errsum
     s.qmin = lo - offset

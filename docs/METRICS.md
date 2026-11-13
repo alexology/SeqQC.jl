@@ -14,12 +14,14 @@ undefined for the data (e.g. a mean over zero reads); it is never replaced by 0.
   request). A byte below the offset or above `~` is an error. Phred scores
   range over 0–93 (offset 33). Quality strings are read and validated only
   when at least one requested metric needs quality (`settings.quality_validated`).
-- Error probabilities `10^(-Q/10)` are tabulated as integer multiples of
-  `2^-44` (relative deviation from the exact value < 3e-8 for Q ≤ 60, < 6e-5 at
-  Q93). Per-read error sums are computed in integer arithmetic, so they are the
-  **exact** sums of the tabulated values, independent of summation order, and
-  rounded once to `Float64`. Base-level error rates are computed from the exact
-  Phred histogram with the same table.
+- Error probabilities `10^(-Q/10)` are correctly rounded `Float64` values.
+  Per-read sums use four accumulators combined in a fixed order: deterministic
+  (same result on every run and machine), relative error of the order of
+  n × 1e-16. Per-read Q values are rounded to 6 decimals, so a read whose bases
+  all have score Q gives exactly Q for every Q (tested for 0–93). Base-level
+  error rates are computed from the exact Phred histogram with the same table.
+  (Until 2026-11-13 the table was in fixed point, multiples of 2^-44; that
+  quantisation turned a read of Q67 bases into 66.999999.)
 
 ## `ReadLength` (`:read_length`)
 

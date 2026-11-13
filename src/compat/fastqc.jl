@@ -84,14 +84,20 @@ end
 
 _label(r::UnitRange) = length(r) == 1 ? string(first(r)) : string(first(r), "-", last(r))
 
-function _require(r::QCResult, names...)
+# Checks that the metrics a table needs are present. Only the per-base modules
+# need every position (`per_base = true`); encoding, per-sequence quality and
+# basic statistics also use the bases pooled beyond `max_positions`, and the
+# length distribution needs only ReadLength.
+function _require(r::QCResult, names...; per_base::Bool = false)
     for n in names
         haskey(r.metrics, n) || throw(ArgumentError("FastQC-compatible output needs metric $(repr(n)); " *
                                                     "analyse with SeqQC.FastQC.metrics()"))
     end
+    :per_position in names || return nothing
     p = r.metrics.per_position.per_position
-    p.truncated && throw(ArgumentError("FastQC-compatible per-base modules need max_positions >= the longest " *
-                                       "read ($(p.max_length)); analyse with a larger max_positions"))
+    per_base && p.truncated &&
+        throw(ArgumentError("FastQC-compatible per-base modules need max_positions >= the longest " *
+                            "read ($(p.max_length)); analyse with a larger max_positions"))
     return p
 end
 
@@ -126,7 +132,7 @@ quantile (rank `floor(p n)`), `NaN` when no position qualifies. Phred values use
 FastQC's encoding guess ([`encoding`](@ref)).
 """
 function per_base_quality(r::QCResult)
-    p = _require(r, :per_position)
+    p = _require(r, :per_position; per_base = true)
     offset = encoding(r).offset
     shift = 33 - offset
     groups = base_groups(p.max_length)
@@ -170,7 +176,7 @@ and C among the G/A/T/C bases of the group (pooled counts, case-insensitive;
 N, U and IUPAC codes ignored; `NaN` when the group has none).
 """
 function per_base_content(r::QCResult)
-    p = _require(r, :per_position)
+    p = _require(r, :per_position; per_base = true)
     groups = base_groups(p.max_length)
     cols = Dict(c => Float64[] for c in (:G, :A, :T, :C))
     for g in groups
@@ -191,7 +197,7 @@ FastQC "Per base N content": per position group, 100 × N / all bases of the
 group (pooled).
 """
 function per_base_n(r::QCResult)
-    p = _require(r, :per_position)
+    p = _require(r, :per_position; per_base = true)
     groups = base_groups(p.max_length)
     pct = Float64[]
     for g in groups

@@ -40,7 +40,9 @@ Outputs per input: `<sample>.seqqc.json` (always), FastQC text files with
 `--fastqc`, `<sample>.html` with `--html`. Then `seqqc_report.html`,
 `seqqc_report.tsv` and `seqqc_report.json` for all successfully analysed
 inputs. Sample names follow `docs/MULTISAMPLE.md` (`/` of a directory prefix
-becomes `_` in file names).
+becomes `_` in file names). Output names that still collide (`a/x.fastq` and
+`a_x.fastq` both give `a_x`) get `_2`, `_3`, … in input order, with a note on
+stderr: no report is ever overwritten by another input of the same run.
 
 Errors: an unreadable or malformed input is reported on stderr and skipped;
 the other inputs are still analysed and the exit code is 1. Warnings of the

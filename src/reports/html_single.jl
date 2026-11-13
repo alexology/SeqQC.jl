@@ -115,6 +115,10 @@ sequence duplication levels, per-tile quality, k-mer content, and the per-sequen
             end
             println(fq, "</div></section>")
             q = m.per_base_quality
+            if isempty(q.base)                   # no read positions (e.g. an empty input)
+                println(fq, """<section class="card wide"><h2>Per-position modules</h2><p class="sub">No read positions: """,
+                        """the input has no bases, so there is nothing to plot by position.</p></section>""")
+            else
             x = _group_mid.(q.base)
             tips = _group_tip.(q.base)
             println(fq, """<section class="card"><h2>Quality per base</h2><p class="sub">Median (blue) and mean (orange) Phred score;
@@ -135,6 +139,7 @@ bands: 25–75% and 10–90% of the scores at each position (FastQC grouping; qu
                     "Cumulative percentage of reads with each adapter starting at or before the position",
                     _group_mid.(a.position), _group_tip.(a.position), a.names, permutedims(reduce(hcat, a.values))))
             end
+            end   # positions present
             if m.overrepresented_sequences !== nothing
                 o = m.overrepresented_sequences
                 println(fq, """<section class="card wide"><h2>Overrepresented sequences</h2><p class="sub">First 50 bases of reads

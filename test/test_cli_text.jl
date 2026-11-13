@@ -127,3 +127,44 @@ end
     @test isfile(joinpath(out3, "all.html")) && isfile(joinpath(out3, "all.tsv")) && isfile(joinpath(out3, "all.json"))
     @test quietly(() -> SeqQC.main(["report", "-o", "x.pdf", out3])) == 2
 end
+
+@testset "review fixes of 2026-11-13" begin
+    F = SeqQC.FastQC
+    quietly(f) = redirect_stdout(devnull) do
+        redirect_stderr(devnull) do
+            f()
+        end
+    end
+    # 1. CLI: names that collide after "/" -> "_" never overwrite each other
+    base = mkpath(joinpath(TMP, "collide"))
+    mkpath(joinpath(base, "a")); mkpath(joinpath(base, "b"))
+    write(joinpath(base, "a", "x.fastq"), fastq_text([("r", "ACGT", "IIII")]))
+    write(joinpath(base, "b", "x.fastq"), fastq_text([("r", "ACGTA", "IIIII")]))
+    write(joinpath(base, "a_x.fastq"), fastq_text([("r", "AC", "II")]))
+    out = mkpath(joinpath(TMP, "collide_out"))
+    files = [joinpath(base, "a", "x.fastq"), joinpath(base, "b", "x.fastq"), joinpath(base, "a_x.fastq")]
+    @test quietly(() -> SeqQC.main(["analyze", "-q", "-o", out, files...])) == 0
+    jsons = sort(filter(endswith(".seqqc.json"), readdir(out)))
+    @test jsons == ["a_x.seqqc.json", "a_x_2.seqqc.json", "b_x.seqqc.json"]
+    @test sort([read_json(joinpath(out, j))["total_bases"] for j in jsons]) == [2, 4, 5]
+    # 2. single-sample HTML of an empty input with the FastQC metrics
+    e = analyze(write_plain("empty_fq.fq", ""); metrics = F.metrics())
+    h = read(report(e, joinpath(TMP, "empty.html")), String)
+    @test occursin("No read positions", h)
+    # 3. length distribution needs only ReadLength; truncated positions block only per-base modules
+    p = write_plain("trunc.fq", fastq_text([("a", "A"^300, "I"^300), ("b", "C"^20, "I"^20)]))
+    @test F.length_distribution(analyze(p; metrics = [ReadLength()])).count == [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1]
+    rt = analyze(p; metrics = F.metrics(; max_positions = 100))
+    @test sum(F.length_distribution(rt).count) == 2
+    @test F.basic_statistics(rt).percent_gc == 6                      # 20 C of 320 bases, beyond-max included
+    @test F.per_sequence_quality(rt).count == [2]
+    @test_throws ArgumentError F.per_base_quality(rt)
+    # 4. per-position states with different Phred offsets are not merged
+    a = map(SeqQC.init_state, (PerPositionStats(),)); b = map(SeqQC.init_state, (PerPositionStats(),))
+    p33 = write_plain("m33.fq", fastq_text([("a", "ACGT", "IIII")]))
+    p64 = write_plain("m64.fq", fastq_text([("a", "ACGT", "hhhh")]))
+    SeqQC.open_reads((rd, i) -> SeqQC._stream!(rd, a, 33, typemax(Int), p33), p33)
+    SeqQC.open_reads((rd, i) -> SeqQC._stream!(rd, b, 64, typemax(Int), p64), p64)
+    @test_throws ArgumentError merge!(a[1], b[1])
+    @test SeqQC.finalize_metric(a[1]).per_position.mean_quality[1] == 40.0
+end

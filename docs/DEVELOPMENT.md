@@ -254,3 +254,26 @@ User's scope: these three items, then stop extending FastQC compatibility.
   adapter") passed the failing files but broke another one; only the full
   re-run showed it.
 
+## 2026-11-13 — Fixes after an external review (Julia 1.13.3)
+
+The review reproduced five problems (all tests passing); each is now covered
+by a regression test (4102/4102):
+
+1. CLI: `a/x.fastq`, `b/x.fastq` and `a_x.fastq` produced two JSON reports
+   (two names became `a_x`) with exit code 0. Output names are now made
+   unique (`a_x_2`) with a note.
+2. Single-sample HTML with FastQC metrics failed on an empty input
+   (`BoundsError` drawing a chart without positions); the page now says that
+   there are no positions.
+3. `FastQC.length_distribution` required `PerPositionStats` and refused
+   truncated positions although it uses only `ReadLength`; the truncation
+   check now applies only to the per-base modules (encoding, per-sequence
+   quality and basic statistics also include the pooled bases).
+4. Merging `PerPositionStats` states analysed with different Phred offsets
+   mixed raw bytes of different meaning (two Q40 reads gave Q55.5); it now
+   raises `ArgumentError`.
+5. The fixed-point error table made a read of Q67 bases 66.999999 (below a
+   Q67 threshold); error sums now use correctly rounded `Float64` values with
+   four accumulators in a fixed order, and every score 0–93 round-trips
+   exactly (also on 1,000,000-base reads).
+

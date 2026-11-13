@@ -81,6 +81,27 @@ end
 _say(quiet, args...) = quiet || println(stdout, args...)
 _err(args...) = println(stderr, "error: ", args...)
 
+# File-safe output names (the "/" of a directory prefix becomes "_"). Names that
+# still collide after that (a/x.fastq and a_x.fastq both give "a_x") get "_2",
+# "_3", ... in input order, with a note on stderr, so no report is overwritten.
+function _output_names(files; io = stderr)
+    base = replace.(_names(files, nothing), "/" => "_")
+    taken = Set{String}()
+    out = String[]
+    for (f, n) in zip(files, base)
+        name = n
+        k = 1
+        while name in taken || (name != n && name in base)
+            k += 1
+            name = string(n, "_", k)
+        end
+        name == n || println(io, "note: output name of ", f, " is ", name, " (", n, " is already used)")
+        push!(taken, name)
+        push!(out, name)
+    end
+    return out
+end
+
 function _cli_analyze(args)
     spec = (aliases = Dict("-o" => "--output", "-t" => "--threads", "-q" => "--quiet", "-v" => "--verbose"),
             flags = Set(["--fastqc", "--fastqc-header", "--html", "--no-report", "--quiet", "--verbose"]),
@@ -105,7 +126,7 @@ function _cli_analyze(args)
     mkpath(outdir)
     metrics = fastqc ? vcat(AbstractQCMetric[BaseComposition(), QualityVsLength()],
                             FastQC.metrics(; max_positions = maxpos, contaminants = contam)) : default_metrics()
-    names = replace.(_names(files, nothing), "/" => "_")
+    names = _output_names(files)
     failed = 0
     results = QCResult[]
     for (f, name) in zip(files, names)

@@ -323,26 +323,33 @@ end
     @test r.settings.definitions.read_length == definition(ReadLength())
 end
 
-@testset "fixed-point error probabilities" begin
+@testset "error probabilities and per-read quality" begin
     P = SeqQC.ERROR_PROBABILITY
-    exact = [10.0^(-q / 10) for q in 0:SeqQC.MAX_PHRED]
-    rel = abs.(P .- exact) ./ exact
-    @test maximum(rel[1:61]) < 3e-8          # Q0..Q60
-    @test maximum(rel) < 6e-5                # up to Q93
-    @test P[1] == 1.0 && P[11] == round(0.1 * 2.0^44) / 2.0^44
+    @test P == [exp10(-q / 10) for q in 0:SeqQC.MAX_PHRED] && P[1] == 1.0 && P[11] == 0.1
     rng = Xoshiro(5)
     s = SeqQC.ReadSummary()
     t = zeros(Int, SeqQC.N_CLASSES)
-    for len in (1, 7, 150, 4000, (1 << 18) + 3, 600_000)
-        q = UInt8.(33 .+ rand(rng, 0:60, len))
+    for len in (1, 3, 7, 150, 4000, 600_000)
+        q = UInt8.(33 .+ rand(rng, 0:93, len))
         seq = fill(UInt8('A'), len)
         @test SeqQC.summarize!(s, t, seq, q, 33)
         e1 = s.error_sum
-        ref = Float64(sum(big(P[b - 33 + 1]) for b in q))    # exact sum of the tabulated values
-        @test e1 == ref
-        SeqQC.summarize!(s, t, seq, reverse(q), 33)
-        @test s.error_sum == e1                                # order-independent
+        ref = sum(big(10)^(-big(b - 33) / 10) for b in q)       # independent, high precision
+        @test abs(e1 - ref) / ref < 1e-12
+        SeqQC.summarize!(s, t, seq, q, 33)
+        @test s.error_sum === e1                                  # deterministic
     end
+    # reads made of one Phred score give exactly that score, for every score
+    # (the former fixed-point table gave 66.999999 for Q67)
+    for (offset, qmax) in ((33, 93), (64, 62)), qv in 0:qmax, len in (1, 150, 1_000_000)
+        qual = fill(UInt8(offset + qv), len)
+        @test SeqQC.summarize!(s, t, fill(UInt8('A'), len), qual, offset)
+        @test s.mean_error_q == qv
+    end
+    r = analyze(write_plain("q67.fq", fastq_text([("a", "ACGTACGTAC", string(Char(33 + 67))^10)]));
+                metrics = [QualityDistribution(thresholds = (67, 68))])
+    @test r.mean_read_quality == 67.0 && r.metrics.quality.reads_at_least.Q67 == 1 &&
+          r.metrics.quality.reads_at_least.Q68 == 0
 end
 
 @testset "quality pass skipped when no metric needs quality" begin

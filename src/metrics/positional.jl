@@ -101,6 +101,10 @@ end
 function Base.merge!(dst::PerPositionState, src::PerPositionState)
     dst.max_positions == src.max_positions ||
         throw(ArgumentError("cannot merge per-position states with different max_positions"))
+    # raw quality bytes only mean the same Phred scores under the same offset
+    dst.offset >= 0 && src.offset >= 0 && dst.offset != src.offset &&
+        throw(ArgumentError("cannot merge per-position states with different Phred offsets " *
+                            "($(dst.offset) and $(src.offset))"))
     src.npos > dst.npos && _grow!(dst, src.npos)
     view(dst.qual, :, 1:src.npos) .+= src.qual
     view(dst.bases, :, 1:src.npos) .+= src.bases
