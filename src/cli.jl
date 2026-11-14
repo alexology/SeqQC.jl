@@ -1,4 +1,5 @@
-# Command-line interface: `seqqc analyze ...` and `seqqc report ...`.
+# Command-line interface: `seqqc analyze ...`, `seqqc report ...` and
+# `seqqc truncation ...`.
 # `main(args)` returns the exit code (0 success, 1 some input failed, 2 usage
 # error) so it can be tested without starting a process.
 
@@ -8,6 +9,7 @@ seqqc $(VERSION_STRING) — streaming QC of sequencing reads
 Usage:
   seqqc analyze [options] FILE...      analyse FASTQ / FASTQ.gz files
   seqqc report [options] DIR|JSON...   multi-sample report from saved SeqQC JSON reports
+  seqqc truncation [options] R1 [R2]   suggest DADA2 truncLen / maxEE (single- or paired-end)
   seqqc --help | --version
 
 analyze options:
@@ -29,6 +31,20 @@ analyze options:
 report options:
   -o, --output FILE       HTML file to write (default: seqqc_report.html); .tsv and .json
                           with the same name are written next to it
+  -q, --quiet
+
+truncation options (filter defaults = DADA2 filterAndTrim; docs/src/TRUNCATION.md):
+      --amplicon-length N sequenced fragment length, R1 start to R2 start (required for pairs)
+      --min-overlap N     overlap required between R1 and R2 (default 20)
+      --max-ee X          maxEE of the suggestion (default 2; 0.5, 1, 2, 3, 5, Inf are profiled)
+      --trim-left N[,M]   trimLeft (one value, or R1,R2; default 0)
+      --trunc-q N         truncQ (default 2)
+      --max-n N           maxN (default 0)
+      --min-len N         minLen (default 20)
+      --min-trunc-len N   do not suggest a truncLen below N
+      --phred-offset N    33 (default) or 64
+      --max-reads N       use only the first N reads (pairs)
+  -o, --output FILE       also write the suggestion as .json or .tsv (repeatable: -o a.json -o a.tsv)
   -q, --quiet
 
 Outputs of analyze, per input: <sample>.seqqc.json (always), FastQC text files
@@ -165,6 +181,49 @@ function _cli_analyze(args)
     return failed == 0 ? 0 : 1
 end
 
+function _cli_truncation(args)
+    spec = (aliases = Dict("-o" => "--output", "-q" => "--quiet"), flags = Set(["--quiet"]),
+            values = Set(["--output", "--amplicon-length", "--min-overlap", "--max-ee", "--trim-left", "--trunc-q",
+                          "--max-n", "--min-len", "--min-trunc-len", "--phred-offset", "--max-reads"]))
+    outputs = String[]
+    rest = String[]
+    i = 1
+    while i <= length(args)                                   # -o may be repeated
+        if args[i] in ("-o", "--output") && i < length(args)
+            push!(outputs, args[i + 1]); i += 2
+        elseif startswith(args[i], "--output=")
+            push!(outputs, args[i][10:end]); i += 1
+        else
+            push!(rest, args[i]); i += 1
+        end
+    end
+    opts, files = _parse_options(rest, spec)
+    length(files) in (1, 2) || throw(_CLIError("truncation needs one FASTQ file (single-end) or two (R1 R2)"))
+    for o in outputs
+        lowercase(splitext(o)[2]) in (".json", ".tsv") || throw(_CLIError("--output must end in .json or .tsv: $(o)"))
+    end
+    tl = split(get(opts, "--trim-left", "0"), ',')
+    trim = tryparse.(Int, tl)
+    (any(isnothing, trim) || any(<(0), trim) || length(trim) > length(files)) &&
+        throw(_CLIError("--trim-left must be N or N,M (non-negative integers, one per file)"))
+    trim_left = length(trim) == 1 ? trim[1] : Tuple(trim)
+    ee = tryparse(Float64, get(opts, "--max-ee", "2"))
+    ee === nothing && throw(_CLIError("--max-ee must be a number"))
+    amp = haskey(opts, "--amplicon-length") ? _int_option(opts, "--amplicon-length", 0; min = 1) : nothing
+    length(files) == 2 && amp === nothing && throw(_CLIError("paired-end input needs --amplicon-length"))
+    s = suggest_truncation(files...; amplicon_length = amp, min_overlap = _int_option(opts, "--min-overlap", 20; min = 0),
+                           max_ee = ee, min_trunc_len = _int_option(opts, "--min-trunc-len", 0; min = 0),
+                           trim_left,
+                           trunc_q = _int_option(opts, "--trunc-q", 2; min = 0),
+                           max_n = _int_option(opts, "--max-n", 0; min = 0),
+                           min_len = _int_option(opts, "--min-len", 20; min = 1),
+                           phred_offset = _int_option(opts, "--phred-offset", 33),
+                           max_reads = haskey(opts, "--max-reads") ? _int_option(opts, "--max-reads", 0; min = 0) : nothing)
+    get(opts, "--quiet", false) || (show(stdout, MIME"text/plain"(), s); println(stdout))
+    foreach(o -> report(s, o), outputs)
+    return 0
+end
+
 function _cli_report(args)
     spec = (aliases = Dict("-o" => "--output", "-q" => "--quiet"), flags = Set(["--quiet"]), values = Set(["--output"]))
     opts, inputs = _parse_options(args, spec)
@@ -197,8 +256,10 @@ function main(args::AbstractVector{<:AbstractString} = ARGS)
             return _cli_analyze(args[2:end])
         elseif args[1] == "report"
             return _cli_report(args[2:end])
+        elseif args[1] == "truncation"
+            return _cli_truncation(args[2:end])
         else
-            throw(_CLIError("unknown command $(repr(args[1])) (expected analyze or report)"))
+            throw(_CLIError("unknown command $(repr(args[1])) (expected analyze, report or truncation)"))
         end
     catch err
         if err isa _CLIError

@@ -17,7 +17,7 @@ result.total_reads, result.total_bases, result.gc_content, result.n50
 """
 module SeqQC
 
-using FASTX: FASTQ, sequence, quality
+using FASTX: FASTQ, sequence, quality, identifier
 using StringViews: StringView
 using CodecZlibNG: GzipDecompressorStream, GzipCompressorStream
 using TranscodingStreams: NoopStream
@@ -28,7 +28,9 @@ export analyze, default_metrics,
     ReadLength, BaseComposition, QualityDistribution, QualityVsLength, PerPositionStats,
     init_state, update!, finalize_metric, metric_name, requirements,
     memory_complexity, definition, yield_by_length, to_json, write_json, report,
-    aggregate, SampleSet, write_table, read_json, sample_name, write_fastqc_data, write_fastqc_summary
+    aggregate, SampleSet, write_table, read_json, sample_name, write_fastqc_data, write_fastqc_summary,
+    truncation_profile, TruncationProfile, kept_reads, suggest_truncation, TruncationSuggestion,
+    truncation_commands
 
 const VERSION_STRING = "0.1.0"
 
@@ -50,6 +52,8 @@ include("reports/aggregate.jl")
 include("reports/html.jl")
 include("reports/html_single.jl")
 include("reports/fastqc_text.jl")
+include("truncation.jl")
+include("truncation_suggest.jl")
 include("cli.jl")
 include("precompile.jl")
 

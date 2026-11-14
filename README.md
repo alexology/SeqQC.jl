@@ -26,8 +26,13 @@ Status: **0.1.0** (see `docs/src/ROADMAP.md`). Implemented today:
   flags (except per-sequence GC) and `fastqc_data.txt`/`summary.txt`,
   identical to FastQC 0.12.1 on the validation inputs (rules determined by
   black-box experiments, see `docs/src/FASTQC.md`);
-- command line `seqqc analyze` / `seqqc report` (`docs/src/CLI.md`) and
-  single-sample HTML reports;
+- command line `seqqc analyze` / `seqqc report` / `seqqc truncation`
+  (`docs/src/CLI.md`) and single-sample HTML reports;
+- truncation profiles for DADA2 / vsearch (`truncation_profile`,
+  `suggest_truncation`): reads or pairs kept by DADA2's filter at every
+  `truncLen` and several `maxEE`, identical to R dada2 1.36 and DADA2.jl on
+  the validation data, with a suggested truncation and ready-made commands
+  (`docs/src/TRUNCATION.md`);
 - JSON report with a versioned schema (`report(result, "sample.json")`,
   `docs/src/JSON.md`);
 - multi-sample summary (`aggregate`, similar in purpose to MultiQC but for
@@ -46,6 +51,7 @@ per-sequence GC flag.
 ```
 bin/seqqc analyze --fastqc --html -o qc/ reads/*.fastq.gz     # Windows: bin\seqqc.cmd
 bin/seqqc report -o qc/all.html qc/
+bin/seqqc truncation S1_R1.fastq.gz S1_R2.fastq.gz --amplicon-length 292
 ```
 
 ## Installation
@@ -112,6 +118,15 @@ s = aggregate(rs)                   # or aggregate("dir_with_seqqc_json_reports"
 report(s, "summary.html")           # also .tsv and .json
 ```
 
+### Truncation for DADA2
+
+```julia
+p = truncation_profile("S1_R1.fastq.gz", "S1_R2.fastq.gz")
+kept_reads(p, (240, 160), 2.0)              # pairs kept by truncLen = c(240, 160), maxEE = 2
+s = suggest_truncation(p; amplicon_length = 292)
+truncation_commands(s).dada2_r              # filterAndTrim(...) call
+```
+
 ### FastQC-compatible modules
 
 ```julia
@@ -126,7 +141,7 @@ Online: <https://alexology.github.io/SeqQC.jl/dev/> (built from `docs/`; build
 locally with `julia --project=docs docs/make.jl` after
 `julia --project=docs -e "using Pkg; Pkg.instantiate()"`). Main pages:
 metrics, multi-sample reports, command line, JSON reports, FastQC
-compatibility, architecture, benchmarks, roadmap, development log, API.
+compatibility, truncation for DADA2, architecture, benchmarks, roadmap, development log, API.
 
 ## Tests
 

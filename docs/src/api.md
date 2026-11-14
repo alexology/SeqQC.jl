@@ -87,6 +87,17 @@ write_fastqc_data
 write_fastqc_summary
 ```
 
+## Truncation for DADA2 and vsearch
+
+```@docs
+truncation_profile
+TruncationProfile
+kept_reads
+suggest_truncation
+TruncationSuggestion
+truncation_commands
+```
+
 ## Command line
 
 ```@docs

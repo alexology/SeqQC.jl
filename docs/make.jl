@@ -22,6 +22,7 @@ makedocs(;
             "Command line" => "CLI.md",
             "JSON reports" => "JSON.md",
             "FastQC compatibility" => "FASTQC.md",
+            "Truncation for DADA2" => "TRUNCATION.md",
         ],
         "Development" => [
             "Architecture" => "ARCHITECTURE.md",

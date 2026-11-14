@@ -585,6 +585,7 @@ end
 include("test_json.jl")
 include("test_aggregate.jl")
 include("test_fastqc_extra.jl")
+include("test_truncation.jl")
 include("test_cli_text.jl")
 
 @testset "quality vs length binning" begin

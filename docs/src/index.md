@@ -29,6 +29,10 @@ Status: **0.1.0** (see [Roadmap](ROADMAP.md)). Implemented today:
   black-box experiments, see [FastQC compatibility](FASTQC.md));
 - command line `seqqc analyze` / `seqqc report` ([Command line](CLI.md)) and
   single-sample HTML reports;
+- truncation profiles for DADA2 / vsearch: reads or pairs kept by DADA2's
+  filter at every `truncLen` and several `maxEE`, exact in one pass, with a
+  suggested truncation and ready-made commands
+  ([Truncation for DADA2](TRUNCATION.md));
 - JSON report with a versioned schema (`report(result, "sample.json")`,
   [JSON reports](JSON.md));
 - multi-sample summary (`aggregate`, similar in purpose to MultiQC but for
@@ -128,6 +132,7 @@ SeqQC.FastQC.flags(r)              # pass / warn / fail
   [JSON reports](JSON.md).
 - [FastQC compatibility](FASTQC.md): the rules of FastQC 0.12.1 reproduced by
   `SeqQC.FastQC`, how they were determined and validated.
+- [Truncation for DADA2](TRUNCATION.md): choosing `truncLen` and `maxEE`.
 - [Architecture](ARCHITECTURE.md), [Benchmarks](BENCHMARKS.md),
   [Roadmap](ROADMAP.md), [Development log](DEVELOPMENT.md).
 - [API](api.md): every exported function and type.

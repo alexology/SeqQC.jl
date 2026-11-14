@@ -3,6 +3,7 @@
 ```
 seqqc analyze [options] FILE...      analyse FASTQ / FASTQ.gz files
 seqqc report [options] DIR|JSON...   multi-sample report from saved SeqQC JSON reports
+seqqc truncation [options] R1 [R2]   suggest DADA2 truncLen / maxEE
 seqqc --help | --version
 ```
 
@@ -55,6 +56,25 @@ JSON is still written and the input counts as failed.
 `seqqc report [-o FILE.html] DIR|JSON...` aggregates saved `*.seqqc.json`
 reports (any SeqQC result JSON) and writes the HTML page plus `.tsv` and
 `.json` with the same base name (default `seqqc_report.html`).
+
+## `truncation`
+
+`seqqc truncation [options] R1 [R2]` computes the truncation profile of one
+FASTQ file or a pair and prints the suggestion, its alternatives and the
+DADA2 / vsearch commands ([Truncation for DADA2](TRUNCATION.md)).
+
+| Option | Meaning |
+|---|---|
+| `--amplicon-length N` | sequenced fragment length, from the first base of R1 to the first base of R2 (required for pairs) |
+| `--min-overlap N` | overlap required between R1 and R2 (default 20) |
+| `--max-ee X` | maxEE of the suggestion (default 2); 0.5, 1, 2, 3, 5 and Inf are always profiled |
+| `--trim-left N[,M]` | trimLeft, one value or one per file (default 0) |
+| `--trunc-q N`, `--max-n N`, `--min-len N` | DADA2 filter settings (defaults 2, 0, 20) |
+| `--min-trunc-len N` | do not suggest a truncation shorter than N |
+| `--phred-offset N` | 33 (default) or 64 |
+| `--max-reads N` | first N reads or pairs only |
+| `-o, --output FILE` | also write `.json` or `.tsv`; repeatable |
+| `-q, --quiet` | do not print the suggestion |
 
 ## Exit codes
 

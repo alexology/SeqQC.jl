@@ -277,3 +277,22 @@ by a regression test (4102/4102):
    four accumulators in a fixed order, and every score 0–93 round-trips
    exactly (also on 1,000,000-base reads).
 
+## 2026-11-14 — Truncation profiles for DADA2 and vsearch
+
+`truncation_profile`, `kept_reads`, `suggest_truncation`,
+`truncation_commands`, `report(s, "x.json"/"x.tsv")` and `seqqc truncation`
+(`docs/src/TRUNCATION.md`). For each read and maxEE threshold the passing
+truncation lengths form one interval, so one histogram of the largest passing
+length (two-dimensional for pairs) gives exact counts for every truncLen in
+one pass.
+
+Validation: 67,968 counts identical to DADA2.jl `filtered` (R dada2 example
+data and a synthetic pair with low qualities, N and short reads) and 400
+identical to R dada2 1.36 `filterAndTrim`
+(`validation/results/truncation_2026-11-14.md`). The first comparison found
+one bug: with `truncLen < trimLeft + minLen` DADA2 keeps nothing, while the
+profile counted the reads passing at longer lengths.
+
+The suggestion rule (most retained bases for single-end; most pairs with the
+required overlap for pairs) is a heuristic; the vsearch command has not been
+run against vsearch.
