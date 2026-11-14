@@ -44,7 +44,7 @@ truncation options (filter defaults = DADA2 filterAndTrim; docs/src/TRUNCATION.m
       --min-trunc-len N   do not suggest a truncLen below N
       --phred-offset N    33 (default) or 64
       --max-reads N       use only the first N reads (pairs)
-  -o, --output FILE       also write the suggestion as .json or .tsv (repeatable: -o a.json -o a.tsv)
+  -o, --output FILE       also write the suggestion as .json, .tsv or .html (repeatable)
   -q, --quiet
 
 Outputs of analyze, per input: <sample>.seqqc.json (always), FastQC text files
@@ -200,7 +200,7 @@ function _cli_truncation(args)
     opts, files = _parse_options(rest, spec)
     length(files) in (1, 2) || throw(_CLIError("truncation needs one FASTQ file (single-end) or two (R1 R2)"))
     for o in outputs
-        lowercase(splitext(o)[2]) in (".json", ".tsv") || throw(_CLIError("--output must end in .json or .tsv: $(o)"))
+        lowercase(splitext(o)[2]) in (".json", ".tsv", ".html") || throw(_CLIError("--output must end in .json, .tsv or .html: $(o)"))
     end
     tl = split(get(opts, "--trim-left", "0"), ',')
     trim = tryparse.(Int, tl)

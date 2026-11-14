@@ -130,7 +130,7 @@ end
     @test length(split(t[2], '\t')) == 3 + length(p.max_ee)
     t1 = readlines(report(s, joinpath(dir, "s.tsv")))
     @test t1[1] == "trunc_len\t" * join(["kept_ee" * x for x in ("0.5", "1", "2", "3", "5", "Inf")], '\t')
-    @test_throws ArgumentError report(s, joinpath(dir, "s.html"))
+    @test_throws ArgumentError report(s, joinpath(dir, "s.pdf"))
     # command line
     out = joinpath(dir, "cli.json")
     @test redirect_stdout(devnull) do
@@ -143,9 +143,34 @@ end
         SeqQC.main(["truncation", f1, f2])
     end == 2
     @test redirect_stderr(devnull) do
-        SeqQC.main(["truncation", f1, "-o", joinpath(dir, "x.html")])
+        SeqQC.main(["truncation", f1, "-o", joinpath(dir, "x.pdf")])
     end == 2
     @test redirect_stdout(devnull) do
         SeqQC.main(["truncation", f1, "--trim-left", "5", "--quiet"])
     end == 0
+end
+
+@testset "truncation HTML" begin
+    mk(n, good) = [(String(rand(MersenneTwister(i), "ACGT", 150)), [j <= good ? 36 : 12 for j in 1:150]) for i in 1:n]
+    dir = mktempdir()
+    f1 = write_reads(joinpath(dir, "h_R1.fastq"), mk(200, 100))
+    f2 = write_reads(joinpath(dir, "h_R2.fastq"), mk(200, 60))
+    sp = suggest_truncation(f1, f2; amplicon_length = 200)
+    h = read(report(sp, joinpath(dir, "p.html")), String)
+    @test startswith(h, "<!DOCTYPE html>") && occursin("data-chart=\"trunc_kept\"", h) && occursin("svg class=\"chart heat2\"", h)
+    @test occursin("suggested c($(sp.trunc_len[1]), $(sp.trunc_len[2]))", h) && occursin("class=\"constraint\"", h)
+    @test count("class=\"cell", h) <= 50 * 50
+    d = JSON3.read(match(r"<script type=\"application/json\" id=\"seqqc-data\">(.*?)</script>"s, h)[1])
+    @test length(d.charts) == 1 && length(d.charts[1].series) == length(sp.profile.max_ee)
+    s = suggest_truncation(f1)
+    h1 = read(report(s, joinpath(dir, "s.html")), String)
+    @test occursin("data-chart=\"trunc_bases\"", h1) && occursin("suggested 131", h1) && !occursin("heat2\"", h1)
+    @test occursin("filterAndTrim(fwd, filtF, truncLen = 131", h1)
+    # names are escaped
+    g = write_reads(joinpath(dir, "a&b.fastq"), mk(50, 100))     # "<" is not valid in Windows file names
+    @test occursin("a&amp;b.fastq", read(report(suggest_truncation(g), joinpath(dir, "e.html")), String))
+    @test redirect_stdout(devnull) do
+        SeqQC.main(["truncation", f1, "-q", "-o", joinpath(dir, "cli.html")])
+    end == 0
+    @test isfile(joinpath(dir, "cli.html"))
 end

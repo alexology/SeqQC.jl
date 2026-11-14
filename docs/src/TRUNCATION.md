@@ -14,11 +14,11 @@ kept_reads(p, (240, 160), 2.0)        # pairs kept by truncLen = c(240, 160), ma
 s = suggest_truncation(p; amplicon_length = 292)
 s.trunc_len, s.max_ee, s.kept, s.fraction
 truncation_commands(s).dada2_r        # ready-to-use filterAndTrim(...) call
-report(s, "S1.truncation.json")       # or .tsv
+report(s, "S1.truncation.html")       # charts; or .json / .tsv
 ```
 
 ```
-seqqc truncation S1_R1.fastq.gz S1_R2.fastq.gz --amplicon-length 292 -o S1.truncation.json
+seqqc truncation S1_R1.fastq.gz S1_R2.fastq.gz --amplicon-length 292 -o S1.truncation.html
 ```
 
 ## What is counted
@@ -106,6 +106,21 @@ File names in the commands are placeholders.
 filter settings, the longest read and the modal-length fraction of each file,
 the rule, the suggestion, the alternatives, the reads kept without
 truncation, the commands and the warnings.
+
+`report(s, "x.html")`: a self-contained page (same style as the other SeqQC
+reports, light and dark theme, tooltips) with
+
+- single-end: reads kept by `truncLen`, one line per `maxEE`, and the
+  retained bases (reads kept × (`truncLen` − `trimLeft`), relative to the
+  maximum), the suggestion marked by a dashed line;
+- paired-end: pairs kept along the overlap constraint (each R1 length with the
+  shortest R2 length giving `min_overlap`), one line per `maxEE`, and a
+  heatmap of the pairs kept over both truncation lengths for the chosen
+  `maxEE` (at most 50 × 50 cells, sampled every few bp for long reads), with
+  the line `L1 + L2 = amplicon_length + min_overlap`, cells below it faded,
+  and the suggestion as a dot;
+- tiles with the suggestion, the table of alternatives (with the reads kept
+  without `truncLen`), the commands and the warnings.
 
 `report(s, "x.tsv")`: single-end, one row per `truncLen` with one column of
 reads kept per threshold (`kept_ee0.5`, `kept_ee1`, ...); paired-end, one row

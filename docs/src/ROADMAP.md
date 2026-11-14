@@ -74,7 +74,8 @@ Thread-local states, chunked processing within files, multi-file execution, merg
 | Export to MultiQC proper | not planned for now (user's decision: SeqQC has its own aggregation) |
 | CLI (`seqqc analyze`, `seqqc report`, launchers) | done (`docs/src/CLI.md`) |
 | Truncation profile and suggestion for DADA2 (`truncation_profile`, `suggest_truncation`, `seqqc truncation`); vsearch command not validated | done (`docs/src/TRUNCATION.md`) |
-| Truncation chart in the HTML reports; profile of merged reads for vsearch | not started |
+| Truncation charts (`report(s, "x.html")`) | done |
+| Profile of merged reads for vsearch | not started |
 
 Original scope:
 

@@ -296,3 +296,11 @@ profile counted the reads passing at longer lengths.
 The suggestion rule (most retained bases for single-end; most pairs with the
 required overlap for pairs) is a heuristic; the vsearch command has not been
 run against vsearch.
+
+Same day, on request: HTML page for a suggestion (`report(s, "x.html")`,
+`seqqc truncation -o x.html`). Single-end: reads kept and retained bases by
+`truncLen`, one line per maxEE. Paired-end: pairs kept along the overlap
+constraint and a heatmap over (R1, R2) truncation lengths with the
+constraint line. Palette, styles and tooltips of the existing reports; the
+line charts gained an optional dashed marker. Checked visually in headless
+Chrome on the R dada2 example data.

@@ -251,13 +251,15 @@ end
     report(s::TruncationSuggestion, path)
 
 Write the suggestion as `.json` (schema `seqqc-truncation`, with the
-alternatives and the commands) or `.tsv` (reads kept for every truncation
+alternatives and the commands), `.tsv` (reads kept for every truncation
 length and `max_ee`; for pairs, one row per R1 length with the shortest R2
-length giving the required overlap).
+length giving the required overlap) or `.html` (charts, see
+[`write_html`](@ref SeqQC.write_html)).
 """
 function report(s::TruncationSuggestion, path::AbstractString)
     ext = lowercase(splitext(path)[2])
     ext == ".json" && return _atomic_write(io -> (_json(io, _truncation_doc(s), ()); println(io)), path)
     ext == ".tsv" && return _atomic_write(io -> _write_truncation_tsv(io, s), path)
-    throw(ArgumentError("report format $(repr(ext)) is not available for a TruncationSuggestion; use .json or .tsv"))
+    ext == ".html" && return _atomic_write(io -> write_html(io, s), path)
+    throw(ArgumentError("report format $(repr(ext)) is not available for a TruncationSuggestion; use .json, .tsv or .html"))
 end

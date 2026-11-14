@@ -73,7 +73,7 @@ DADA2 / vsearch commands ([Truncation for DADA2](TRUNCATION.md)).
 | `--min-trunc-len N` | do not suggest a truncation shorter than N |
 | `--phred-offset N` | 33 (default) or 64 |
 | `--max-reads N` | first N reads or pairs only |
-| `-o, --output FILE` | also write `.json` or `.tsv`; repeatable |
+| `-o, --output FILE` | also write `.json`, `.tsv` or `.html` (charts); repeatable |
 | `-q, --quiet` | do not print the suggestion |
 
 ## Exit codes

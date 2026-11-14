@@ -104,7 +104,7 @@ function _axes_svg(io, c::_Chart, ytop, yticks, height, sx; ybottom = 0.0)
     println(io, """<text class="axis-title" x="$((_ML + _W - _MR) ÷ 2)" y="$(height - 4)" text-anchor="middle">$(_esc(c.xlabel))</text>""")
 end
 
-function _line_svg(io, c::_Chart, visible_rows; attr = "data-sample")
+function _line_svg(io, c::_Chart, visible_rows; attr = "data-sample", marker = nothing, marker_label = "")
     sx = _xscale(c)
     vals = filter(isfinite, c.y)
     yticks, ytop = _nice_ticks(isempty(vals) ? 0.0 : maximum(vals))
@@ -137,6 +137,12 @@ function _line_svg(io, c::_Chart, visible_rows; attr = "data-sample")
         path = String(take!(d))
         isempty(path) && continue
         println(io, """<path class="series s$(i - 1)" $(attr)="$(i - 1)" d="$path"/>""")
+    end
+    if marker !== nothing                        # vertical reference line (e.g. a suggested value)
+        mx = round(sx(marker); digits = 1)
+        println(io, """<line class="marker" x1="$mx" x2="$mx" y1="$(_MT)" y2="$(_H - _MB)"/>""",
+                mx > _W - 150 ? """<text class="marker-label" x="$(mx - 4)" y="$(_MT + 10)" text-anchor="end">$(_esc(marker_label))</text>""" :
+                                """<text class="marker-label" x="$(mx + 4)" y="$(_MT + 10)">$(_esc(marker_label))</text>""")
     end
     println(io, """<line class="crosshair" x1="0" x2="0" y1="$(_MT)" y2="$(_H - _MB)" visibility="hidden"/>""",
             """<rect class="hit" x="$(_ML)" y="$(_MT)" width="$(_W - _ML - _MR)" height="$(_H - _MB - _MT)"/>""")
@@ -399,6 +405,7 @@ svg.chart{width:100%;height:auto;display:block;margin-top:8px;overflow:visible}
 .series.sel{stroke-width:3}
 .row.sel .cell{stroke:var(--ink);stroke-width:.6}
 .crosshair{stroke:var(--ink2);stroke-width:1}.hit{fill:transparent}
+.marker{stroke:var(--ink);stroke-width:1;stroke-dasharray:4 3}.marker-label{fill:var(--ink);font-size:11px;paint-order:stroke;stroke:var(--surface-1);stroke-width:3px;stroke-linejoin:round}
 .ramp{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--muted);margin-top:4px}
 .ramp .bar{display:flex;height:8px;width:160px;border-radius:2px;overflow:hidden}.ramp i{flex:1}
 #tip{position:fixed;pointer-events:none;background:var(--surface-1);color:var(--ink);border:1px solid var(--border);

@@ -54,6 +54,7 @@ include("reports/html_single.jl")
 include("reports/fastqc_text.jl")
 include("truncation.jl")
 include("truncation_suggest.jl")
+include("reports/html_truncation.jl")
 include("cli.jl")
 include("precompile.jl")
 
